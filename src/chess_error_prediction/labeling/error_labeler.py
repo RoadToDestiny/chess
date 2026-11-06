@@ -2,6 +2,7 @@
 Error labeling logic based on Stockfish centipawn loss and configurable thresholds.
 """
 
+import math
 from typing import Any, Dict, List, Optional, Tuple, Union
 import pandas as pd
 
@@ -28,7 +29,11 @@ def compute_centipawn_loss(
     - For White: eval_loss = eval_before_white - eval_after_white
     - For Black: eval_loss = eval_after_white - eval_before_white
     """
-    is_white = (color in ['w', 'W', 1, 'white', 'White'])
+    if color not in ("w", "W", 1, "white", "White", "b", "B", 0, "black", "Black"):
+        raise ValueError(f"Unsupported player color: {color!r}")
+    is_white = color in ("w", "W", 1, "white", "White")
+    if not math.isfinite(eval_before_white) or not math.isfinite(eval_after_white):
+        raise ValueError("Position evaluations must be finite numbers.")
     if is_white:
         loss = eval_before_white - eval_after_white
     else:
@@ -44,7 +49,11 @@ def assign_blunder_label(
     """
     Returns 1 if centipawn loss is >= threshold_cp, otherwise 0.
     """
+    if threshold_cp < 0:
+        raise ValueError("Error threshold must be non-negative.")
     if eval_loss is None or pd.isna(eval_loss):
+        return 0
+    if not math.isfinite(float(eval_loss)):
         return 0
     return 1 if eval_loss >= threshold_cp else 0
 

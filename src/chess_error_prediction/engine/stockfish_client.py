@@ -3,6 +3,7 @@ Stockfish UCI engine client and lifecycle management.
 """
 
 from dataclasses import dataclass
+import os
 from typing import Any, Dict, Optional
 import chess
 import chess.engine
@@ -21,6 +22,7 @@ class StockfishConfig:
     threads: Optional[int] = None
     hash_mb: Optional[int] = None
     mate_score_cp: int = 100000
+    expected_version: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.depth < 1:
@@ -29,6 +31,15 @@ class StockfishConfig:
             raise ValueError("Stockfish timeout must be positive.")
         if self.mate_score_cp <= 0:
             raise ValueError("Mate score in centipawns must be positive.")
+
+    @classmethod
+    def from_environment(cls, **overrides: Any) -> "StockfishConfig":
+        """Build configuration using ``STOCKFISH_PATH`` when it is defined."""
+        executable = overrides.pop(
+            "executable",
+            os.environ.get("STOCKFISH_PATH", "stockfish"),
+        )
+        return cls(executable=executable, **overrides)
 
 
 class StockfishEngine:
@@ -53,7 +64,7 @@ class StockfishEngine:
                 options["Hash"] = self.config.hash_mb
             if options:
                 self._engine.configure(options)
-        except (OSError, chess.engine.EngineError) as exc:
+        except (OSError, TimeoutError, chess.engine.EngineError) as exc:
             self._engine = None
             raise StockfishError(
                 f"Unable to start Stockfish executable '{self.config.executable}'. "
@@ -63,8 +74,12 @@ class StockfishEngine:
 
     def close(self) -> None:
         if self._engine is not None:
-            self._engine.quit()
-            self._engine = None
+            try:
+                self._engine.quit()
+            except chess.engine.EngineError as exc:
+                raise StockfishError("Stockfish failed while shutting down.") from exc
+            finally:
+                self._engine = None
 
     def __enter__(self) -> "StockfishEngine":
         return self.start()
@@ -105,4 +120,13 @@ class StockfishEngine:
         """Verifies startup by analyzing initial position."""
         self.start()
         self.analyze(chess.Board())
-        return self.engine_id
+        engine_id = self.engine_id
+        if (
+            self.config.expected_version is not None
+            and engine_id.get("version") != self.config.expected_version
+        ):
+            raise StockfishError(
+                f"Unexpected Stockfish version: {engine_id.get('version', '<unknown>')!r}; "
+                f"expected {self.config.expected_version!r}."
+            )
+        return engine_id

@@ -7,6 +7,16 @@ from typing import Optional
 import requests
 
 
+LICHESS_OPEN_DATABASE_URL = "https://database.lichess.org/standard/lichess_db_standard_{month}.pgn.zst"
+
+
+def lichess_month_url(month: str) -> str:
+    """Return the standard-game Lichess Open Database URL for ``YYYY-MM``."""
+    if len(month) != 7 or month[4] != "-" or not month.replace("-", "").isdigit():
+        raise ValueError("month must use the YYYY-MM format.")
+    return LICHESS_OPEN_DATABASE_URL.format(month=month)
+
+
 def download_pgn(
     url: str,
     destination: Path,

@@ -1,2 +1,0 @@
-experiment,n_train,n_val,n_test,test_error_ratio,roc_auc,pr_auc,brier_score
-main_xgboost_model,3448,716,728,0.125,0.5811,0.1716,0.1774
