@@ -1,0 +1,16 @@
+position_id,ply,player_color,fen_before,move_played,eval_before_white,eval_after_white,eval_loss,is_error,human_expert_verification,blunder_category
+pos_001,1,white,rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1,e2e4,15.0,20.0,-5.0,0,Standard opening move. Advantage maintained.,none
+pos_002,2,black,rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1,e7e5,20.0,22.0,-2.0,0,Classical open game response. Normal move.,none
+pos_003,3,white,rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2,f2f4,22.0,-10.0,32.0,0,King's Gambit. Slight concession but playable novelty.,positional_imprecision
+pos_004,6,black,r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3,f7f6,60.0,380.0,320.0,1,Severe tactical blunder: weakens diagonal e8-h5 allowing Qh5+ tactics.,tactical_blunder
+pos_005,12,black,r1bqkb1r/pp1p1ppp/2n1pn2/8/2BNP3/8/PPP2PPP/RNBQK2R b KQkq - 0 6,f6e4,35.0,310.0,275.0,1,Blunder: Nxe4 allows Bxf7+ followed by Qh5+ regaining piece with lost king safety.,calculation_error
+pos_006,14,black,r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R b KQkq - 0 7,d7d5,40.0,45.0,-5.0,0,Direct center strike. Fully sound move.,none
+pos_007,18,white,r1b2rk1/pp1p1ppp/1qn1pn2/8/1bBNP3/2N1B3/PPP2PPP/R2QK2R w KQ - 4 9,a2a3,110.0,-140.0,250.0,1,Blunder: White missed tactical pin and discovery on c3.,hanging_piece
+pos_008,22,black,r2q1rk1/pp3ppp/2n1bn2/3p4/8/1BN1BN2/PPP2PPP/R2QK2R b KQ - 2 11,d5d4,-20.0,-15.0,-5.0,0,Temporary pawn sacrifice opening files. Sound tactical choice.,none
+pos_009,24,white,r2q1rk1/pp3ppp/2n1bn2/8/3p4/1BN1BN2/PPP2PPP/R2Q1RK1 w - - 0 12,e3d4,80.0,95.0,-15.0,0,Correct piece capture maintaining balance.,none
+pos_010,28,black,r4rk1/pp2qppp/2n1b3/8/3N4/1B6/PPP2PPP/R2Q1RK1 b - - 0 14,c6d4,10.0,15.0,-5.0,0,Routine piece simplification in middlegame.,none
+pos_011,32,white,r4rk1/pp2qppp/4b3/8/3Q4/1B6/PPP2PPP/R4RK1 w - - 0 16,f1e1,15.0,20.0,-5.0,0,Strong centralization of rook on open e-file.,none
+pos_012,36,black,4rrk1/pp3ppp/4b3/8/3q4/1B6/PPP2PPP/R2QR1K1 b - - 0 18,e6b3,0.0,260.0,260.0,1,Blunder: Leaves back-rank unprotected leading to Qxe8+ Rxe8 Rxe8#.,back_rank_blunder
+pos_013,42,white,5rk1/pp3ppp/8/8/3q4/1B6/PPP2PPP/R2QR1K1 w - - 0 21,d1d4,280.0,290.0,-10.0,0,Simplification into winning endgame with queen advantage.,none
+pos_014,50,black,5rk1/pp3ppp/8/8/8/8/PPP2PPP/R5K1 b - - 0 25,f8d8,-450.0,-440.0,-10.0,0,Active defense attempt in lost endgame.,none
+pos_015,54,black,3r2k1/pp3ppp/8/8/8/8/PPP2PPP/R5K1 b - - 2 27,d8d2,-420.0,-150.0,-270.0,0,Rook to 7th rank creates counterplay and complicates conversion.,none

@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "num_features_evaluated": 14,
+  "non_numeric_columns": [],
+  "total_null_entries": 0,
+  "total_infinite_entries": 0,
+  "is_leakage_free": true,
+  "leakage_violations": [],
+  "features_audited": [
+    "eval_before",
+    "eval_diff_prev_move",
+    "material_balance",
+    "piece_count",
+    "pawn_count",
+    "legal_checks_count",
+    "legal_captures_count",
+    "attacked_pieces_count",
+    "game_phase",
+    "player_rating",
+    "opponent_rating",
+    "rating_diff",
+    "time_control_base",
+    "time_control_inc"
+  ]
+}

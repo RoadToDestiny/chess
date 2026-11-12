@@ -1,0 +1,16 @@
+================================================================================
+RESEARCH ENVIRONMENT & STOCKFISH EVALUATION SPECIFICATION (STAGE 1 & 3 ARTIFACT)
+================================================================================
+Operating System:              Windows 10 (AMD64)
+Python Version:                3.14.7
+Chess Engine:                  Stockfish 17
+Engine Search Depth:           18 plies (fixed across all games)
+UCI Coordinate Perspective:    White POV (centipawns; + advantage White, - advantage Black)
+Centipawn Evaluation Bounds:   Clamped numeric [-2500, +2500] cp for standard positions
+Forced Checkmate Representation: +/- 100000 cp (isolated with is_mate_eval=True)
+Target Centipawn Loss Formula:  White: eval_before - eval_after; Black: eval_after - eval_before
+Default Blunder Threshold:     200 cp (error = 1 if loss >= 200, else 0)
+Sensitivity Thresholds:        150 cp, 200 cp, 300 cp (Experiment 2)
+================================================================================
+VERIFICATION STATUS:           VALIDATED FOR MACHINE LEARNING TARGET & FEATURES
+================================================================================

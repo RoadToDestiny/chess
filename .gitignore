@@ -22,6 +22,7 @@ data/raw/*.pgn
 data/raw/*.zst
 data/raw/*.gz
 data/interim/*
+!data/interim/labeled_sample.csv
 data/processed/*.csv
 data/processed/*.parquet
 data/splits/*.csv
