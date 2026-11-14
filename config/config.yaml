@@ -2,21 +2,24 @@
 # Прогнозирование вероятности шахматных ошибок на основе XGBoost
 
 stockfish:
-  executable: "stockfish"
-  version: "Stockfish 17"
+  executable: "bin/stockfish-windows-x86-64-universal.exe"
+  version: "Stockfish 19"
   depth: 18
   timeout: 30.0
-  threads: 2
-  hash_mb: 256
+  threads: 1
+  hash_mb: 128
   mate_score_cp: 100000
 
 filter:
   min_elo: 1600
   max_elo: 2800
+  max_elo_diff: 300
   min_base_seconds: 600
   allowed_time_controls: null
   min_full_moves: 10
   max_full_moves: 120
+  exclude_bots: true
+  require_standard_variant: true
 
 labeling:
   default_threshold_cp: 200.0
@@ -52,6 +55,8 @@ features:
     - "time_control_inc"
 
 model:
+  tree_method: "hist"
+  device: "cuda"
   n_estimators: 200
   max_depth: 5
   learning_rate: 0.05

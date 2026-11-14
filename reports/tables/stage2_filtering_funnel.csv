@@ -1,0 +1,13 @@
+filter_name,pgn_tag,condition,scientific_justification,action
+Time Control Minimum,TimeControl,base_seconds >= 600,Filters out bullet and blitz to focus on cognitive decision-making rather than mouse slips,Reject game
+Player Rating Bounds,WhiteElo/BlackElo,1600 <= elo <= 2800,Eliminates beginners with chaotic play and isolates established human players,Reject game
+Rating Gap Constraint,WhiteElo/BlackElo,|WhiteElo - BlackElo| <= 300,Prevents highly asymmetric games with psychological distortion or speculative play,Reject game
+Bot Account Exclusion,WhiteTitle/BlackTitle,Title != 'BOT',Ensures 100% human games by excluding computer engine accounts,Reject game
+Standard Chess Variant,Variant,Variant in ('Standard' or None),Eliminates non-standard piece moves and rules (e.g. Chess960 or Atomic),Reject game
+Game Length Bounds,Ply Count,10 <= full_moves <= 120,Excludes premature draws/aborts (<10) and aberrant long endgames (>120),Reject game
+Legitimate Game Outcome,Result,Result in ('1-0' '0-1' '1/2-1/2'),Excludes unfinished or interrupted games marked with '*',Reject game
+Exclusion of Anomalous Termination,Termination,Termination not in ('Abandoned' 'Rules infraction'),Excludes rage-quits and server-detected anti-cheat disqualifications,Reject game
+Strict FIDE Move Legality,Mainline Moves,All moves in board.legal_moves,Guarantees 100% syntactical and positional integrity across the entire game,Reject game
+Clock Time Preservation,Comments,Extract [%clk hh:mm:ss],Preserves remaining time for cognitive time-trouble analysis (H2),Retain tag
+Target Leakage Prevention,Comments,Strip [%eval ...] and chat,Prevents Lichess server evaluations and user chat from leaking into features,Strip tag
+Cryptographic Anonymization,White/Black,SHA-256 pseudonymization,Complies with GDPR and academic research ethics without losing game consistency,Anonymize tag

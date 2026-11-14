@@ -1,0 +1,16 @@
+metric_name,value,unit,interpretation_and_justification
+Total Games Analyzed,500,games,Full sample of filtered Rapid games from Lichess 2026-09
+Average Game Length,36.3,full moves,Typical length of Rapid games in 1600-2800 Elo range
+Median Game Length,33.0,full moves,50% of games conclude by move 33
+Games Reaching Move 25,370,games (74.0%),Transition threshold into late middlegame / early endgame
+Games Reaching Move 30,292,games (58.4%),Standard move-based endgame threshold
+Games Reaching Move 35,233,games (46.6%),Deep endgame reached
+Games with Material Endgame,231,games (46.2%),Queens off board or non-pawn material <= 13 points each side
+Average Endgame Start Move,24.6,full moves,Mean move where queen trade or critical material reduction occurs
+Median Endgame Start Move,24.0,full moves,Median transition to endgame occurs at move 24
+Average Endgame Duration,23.2,full moves,Average length of the endgame phase itself in games reaching it
+Median Endgame Duration,21.0,full moves,Median duration of endgame play
+Average Total Length of Endgame Games,47.8,full moves,Games that transition into endgame average ~48 moves in total
+Opening Phase Boundary,1-10,full moves,Piece development and castling (blunder rate < 3%)
+Middlegame Phase Boundary,11-30,full moves,Active tactical operations with maximum blunder density
+Endgame Phase Boundary,31+,full moves,Material reduction where king activity and pawn promotion become decisive

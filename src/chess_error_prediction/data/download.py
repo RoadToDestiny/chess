@@ -7,7 +7,7 @@ from typing import Optional
 import requests
 
 
-LICHESS_OPEN_DATABASE_URL = "https://database.lichess.org/standard/lichess_db_standard_{month}.pgn.zst"
+LICHESS_OPEN_DATABASE_URL = "https://database.lichess.org/standard/lichess_db_standard_rated_{month}.pgn.zst"
 
 
 def lichess_month_url(month: str) -> str:

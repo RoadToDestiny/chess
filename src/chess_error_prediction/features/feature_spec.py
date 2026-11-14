@@ -5,7 +5,17 @@ Defines feature subsets, types, defaults, and descriptions.
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+import chess
 import pandas as pd
+
+
+PIECE_VALUES: Dict[int, int] = {
+    chess.PAWN: 1,
+    chess.KNIGHT: 3,
+    chess.BISHOP: 3,
+    chess.ROOK: 5,
+    chess.QUEEN: 9,
+}
 
 
 @dataclass(frozen=True)

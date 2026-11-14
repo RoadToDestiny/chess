@@ -17,8 +17,13 @@ ENV/
 *.swp
 *.swo
 
+# Binary executables
+bin/*.exe
+bin/*.zip
+
 # Project Data (raw PGNs and large processed tables)
 data/raw/*.pgn
+!data/raw/filtered_games.pgn
 data/raw/*.zst
 data/raw/*.gz
 data/interim/*
@@ -26,6 +31,7 @@ data/interim/*
 data/processed/*.csv
 data/processed/*.parquet
 data/splits/*.csv
+!data/splits/*_game_ids.csv
 
 # Artifacts & Model weights
 artifacts/models/*.json

@@ -9,6 +9,7 @@ import os
 
 METADATA_COLUMNS: List[str] = [
     "game_id",
+    "position_id",
     "ply",
     "move_number",
     "color",
@@ -77,16 +78,22 @@ class PositionRecord:
     time_control_inc: float
 
     # Target & Post-move Evaluation
-    eval_after: float
-    eval_loss: float
-    is_error: int
+    eval_after: Optional[float] = None
+    eval_loss: Optional[float] = None
+    is_error: int = 0
     is_mate_eval: bool = False
     fen: Optional[str] = None
     clock_remaining: Optional[float] = None
 
+    @property
+    def position_id(self) -> str:
+        """Composite unique identifier for the position within the research dataset."""
+        return f"{self.game_id}_{self.ply}"
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "game_id": self.game_id,
+            "position_id": self.position_id,
             "ply": self.ply,
             "move_number": self.move_number,
             "color": self.color,

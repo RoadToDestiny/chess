@@ -62,8 +62,10 @@ def verify_mate_isolation_protocol(
 
 def generate_env_setup_log(
     output_path: str = "reports/tables/env_setup.log",
-    stockfish_version: str = "Stockfish 17",
+    stockfish_version: str = "Stockfish 19",
     depth: int = 18,
+    threads: int = 1,
+    hash_mb: int = 128,
     mate_score_cp: int = 100000,
 ) -> str:
     """
@@ -80,6 +82,8 @@ def generate_env_setup_log(
         f"Python Version:                {platform.python_version()}\n"
         f"Chess Engine:                  {stockfish_version}\n"
         f"Engine Search Depth:           {depth} plies (fixed across all games)\n"
+        f"Engine Execution Threads:      {threads} (fixed deterministic evaluation)\n"
+        f"Engine Hash Memory:            {hash_mb} MB\n"
         f"UCI Coordinate Perspective:    White POV (centipawns; + advantage White, - advantage Black)\n"
         f"Centipawn Evaluation Bounds:   Clamped numeric [-2500, +2500] cp for standard positions\n"
         f"Forced Checkmate Representation: +/- {mate_score_cp} cp (isolated with is_mate_eval=True)\n"

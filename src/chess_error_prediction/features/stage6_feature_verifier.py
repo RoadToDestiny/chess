@@ -19,9 +19,12 @@ FORBIDDEN_LEAKAGE_TERMS = [
     "target_move",
     "target_move_uci",
     "move_played",
+    "played_move",
     "san",
     "uci",
     "fen_after",
+    "result",
+    "termination",
 ]
 
 

@@ -17,6 +17,9 @@ FORBIDDEN_LEAKAGE_SUBSTRINGS = [
     "blunder",
     "target_move",
     "target_move_uci",
+    "played_move",
+    "result",
+    "termination",
 ]
 
 

@@ -46,6 +46,30 @@ def test_label_position_evaluations_dict_integration():
     assert res["is_mate_eval"] is False
 
 
+def test_asymmetric_mate_blunder_labeling():
+    # 1. White blunders into checkmate: eval_before was normal +100 cp, eval_after Black mates in 2 (mate_in = -2)
+    eval_before_normal = {"score_cp": 100.0, "is_mate": False, "mate_in": None, "depth": 18}
+    eval_after_mate_black = {"score_cp": -100000.0, "is_mate": True, "mate_in": -2, "depth": 18}
+    res_w_blunder = label_position_evaluations(eval_before_normal, eval_after_mate_black, color="w")
+    assert res_w_blunder["is_error"] == 1
+    assert res_w_blunder["eval_loss"] == 2500.0
+    assert res_w_blunder["is_mate_eval"] is False
+
+    # 2. White delivers checkmate: eval_after White mates in 1 (mate_in = +1)
+    eval_after_mate_white = {"score_cp": 100000.0, "is_mate": True, "mate_in": 1, "depth": 18}
+    res_w_win = label_position_evaluations(eval_before_normal, eval_after_mate_white, color="w")
+    assert res_w_win["is_error"] == 0
+    assert res_w_win["eval_loss"] == 0.0
+    assert res_w_win["is_mate_eval"] is False
+
+    # 3. Position before move was already forced mate: excluded with is_mate_eval = True
+    eval_before_already_mate = {"score_cp": -100000.0, "is_mate": True, "mate_in": -1, "depth": 18}
+    res_already_mate = label_position_evaluations(eval_before_already_mate, eval_after_mate_black, color="w")
+    assert res_already_mate["is_mate_eval"] is True
+    assert res_already_mate["is_error"] == 0
+    assert res_already_mate["eval_loss"] is None
+
+
 def test_mate_filtering():
     df = pd.DataFrame({
         "game_id": ["g1", "g1", "g2"],

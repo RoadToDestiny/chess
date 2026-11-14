@@ -37,10 +37,13 @@ def analyze_game(
     """Yield one analysis record per legal mainline move in ``game``.
 
     The board is evaluated before and after each move using the same engine
-    configuration. Mate evaluations are retained in the record but excluded
-    from centipawn-loss labeling.
+    configuration. To reduce computational complexity by 50%, evaluation after
+    ply k is cached and reused as evaluation before ply k+1.
+    Mate evaluations are retained in the record but excluded from centipawn-loss labeling.
     """
     board = game.board()
+    current_eval = normalize_evaluation(engine.analyze(board))
+
     for ply, move in enumerate(game.mainline_moves(), start=1):
         if move not in board.legal_moves:
             raise ValueError(f"Illegal move at ply {ply}: {move.uci()}")
@@ -49,18 +52,23 @@ def analyze_game(
         move_number = board.fullmove_number
         san = board.san(move)
         fen_before = board.fen()
-        evaluation_before = normalize_evaluation(engine.analyze(board))
+        evaluation_before = current_eval
+
         board.push(move)
         fen_after = board.fen()
         evaluation_after = normalize_evaluation(engine.analyze(board))
+        current_eval = evaluation_after
+
         label = label_position_evaluations(
             {
                 "score_cp": evaluation_before.score_cp,
                 "is_mate": evaluation_before.is_mate,
+                "mate_in": evaluation_before.mate_in,
             },
             {
                 "score_cp": evaluation_after.score_cp,
                 "is_mate": evaluation_after.is_mate,
+                "mate_in": evaluation_after.mate_in,
             },
             color=color,
             threshold_cp=threshold_cp,

@@ -32,6 +32,21 @@ from chess_error_prediction.features.stage6_feature_verifier import (
 from chess_error_prediction.schemas import ALL_FEATURES
 
 
+# ------------------ STAGE 1 TESTS (BACKEND 3) ------------------
+
+def test_stage1_xgboost_gpu_acceleration():
+    """Verify GPU-accelerated training (NVIDIA CUDA) with XGBoost on tabular features."""
+    import numpy as np
+    import xgboost as xgb
+    X = np.random.randn(25, 14).astype(np.float32)
+    y = np.random.randint(0, 2, 25).astype(np.int32)
+    clf = xgb.XGBClassifier(n_estimators=3, tree_method="hist", device="cuda", random_state=42)
+    clf.fit(X, y)
+    probs = clf.predict_proba(X)
+    assert probs.shape == (25, 2)
+    assert np.all(probs >= 0.0) and np.all(probs <= 1.0)
+
+
 # ------------------ STAGE 3 TESTS ------------------
 
 def test_stage3_evaluation_perspective_white_and_black():

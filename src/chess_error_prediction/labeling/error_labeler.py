@@ -14,6 +14,9 @@ FORBIDDEN_LEAKAGE_SUBSTRINGS = [
     "blunder",
     "target",
     "label",
+    "played_move",
+    "result",
+    "termination",
 ]
 
 
@@ -62,22 +65,56 @@ def label_position_evaluations(
     eval_before: Dict[str, Any],
     eval_after: Dict[str, Any],
     color: Union[str, int],
-    threshold_cp: float = 200.0
+    threshold_cp: float = 200.0,
+    max_clamped_loss: float = 2500.0,
 ) -> Dict[str, Any]:
     """
     Integrates raw Stockfish evaluations for before and after move,
     producing eval_loss, is_mate_eval, and is_error.
+
+    Asymmetric mate handling protocol:
+    1. Pre-move forced mate (eval_before is mate): position is already decided,
+       marked with is_mate_eval=True and excluded from regression.
+    2. Blunder into mate (eval_before normal, eval_after opponent has mate):
+       marked as unconditional blunder is_error=1 with loss=max_clamped_loss.
+    3. Delivery of mate (eval_before normal, eval_after player has mate):
+       sound move with loss=0.0 and is_error=0.
     """
-    is_mate_eval = bool(eval_before.get("is_mate", False) or eval_after.get("is_mate", False))
+    is_white = color in ("w", "W", 1, "white", "White")
+    is_mate_before = bool(eval_before.get("is_mate", False))
+    is_mate_after = bool(eval_after.get("is_mate", False))
     score_before = eval_before.get("score_cp")
     score_after = eval_after.get("score_cp")
 
-    if is_mate_eval or score_before is None or score_after is None:
+    if is_mate_before or score_before is None:
         loss = None
         is_error = 0
+        is_mate_eval = True
+    elif is_mate_after:
+        mate_in = eval_after.get("mate_in")
+        # In White POV: positive mate_in means White mates; negative means Black mates
+        if mate_in is not None:
+            opponent_mates = (mate_in < 0) if is_white else (mate_in > 0)
+        else:
+            # Fallback to score_after if mate_in is absent
+            opponent_mates = (score_after < 0) if is_white else (score_after > 0) if score_after is not None else True
+
+        if opponent_mates:
+            loss = float(max_clamped_loss)
+            is_error = 1
+            is_mate_eval = False
+        else:
+            loss = 0.0
+            is_error = 0
+            is_mate_eval = False
+    elif score_after is None:
+        loss = None
+        is_error = 0
+        is_mate_eval = False
     else:
         loss = compute_centipawn_loss(float(score_before), float(score_after), color)
         is_error = assign_blunder_label(loss, threshold_cp=threshold_cp)
+        is_mate_eval = False
 
     return {
         "eval_before": score_before,

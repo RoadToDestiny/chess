@@ -12,6 +12,27 @@ import zstandard
 
 
 _TIME_CONTROL_PATTERN = re.compile(r"^(?P<base>\d+)(?:\+(?P<increment>\d+))?$")
+_CLOCK_PATTERN = re.compile(r"\[%clk\s+(\d+):(\d{2})(?::(\d{2}))?\]")
+
+
+def parse_clock_seconds(comment: str) -> Optional[float]:
+    """
+    Parses Lichess clock comment [%clk h:mm:ss] or [%clk mm:ss] into remaining seconds.
+    Returns None if no valid clock tag is found.
+    """
+    if not comment or not isinstance(comment, str):
+        return None
+    match = _CLOCK_PATTERN.search(comment)
+    if not match:
+        return None
+    parts = [int(p) for p in match.groups() if p is not None]
+    if len(parts) == 3:
+        h, m, s = parts
+        return float(h * 3600 + m * 60 + s)
+    elif len(parts) == 2:
+        m, s = parts
+        return float(m * 60 + s)
+    return None
 
 
 def parse_time_control(value: str) -> Tuple[int, int]:
