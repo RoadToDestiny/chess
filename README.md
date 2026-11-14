@@ -4,9 +4,7 @@
 
 ---
 
-## 1. Архитектура репозитория (по стандарту `Chess_repository_structure.md`)
-
-Структура репозитория объединяет результаты работы бэкендеров по **Этапам 1–3**:
+## 1. Архитектура репозитория
 
 ```text
 Chess/
@@ -16,109 +14,120 @@ Chess/
 ├── requirements.txt                  # Зависимости Python
 ├── pyproject.toml                    # Конфигурация сборки пакета chess_error_prediction
 ├── docs/
-│   ├── journal_methodology_guide.md            # Методологические заметки и формулировки для научной статьи
-│   └── system_analyst_questions_and_decisions.md # Вопросы, решения и риски для системного аналитика
+│   └── journal_methodology_guide.md  # Единое научно-методологическое руководство (Этапы 1–6)
 │
 ├── config/
-│   └── config.yaml                   # Единая конфигурация параметров Stockfish, фильтрации и разметки
+│   └── config.yaml                   # Конфигурация параметров Stockfish, фильтрации, признаков и сплитов
 │
 ├── data/                             # Директории данных исследования
-│   ├── raw/                          # Исходные PGN-файлы из Lichess Open Database
-│   ├── interim/                      # Промежуточные результаты анализа Stockfish
-│   ├── processed/                    # Итоговый датасет с признаками и метками ошибок
-│   └── splits/                       # Идентификаторы партий для train/val/test
+│   ├── raw/                          # Исходный отфильтрованный корпус (filtered_games.pgn, 500 партий)
+│   ├── interim/                      # Промежуточные результаты и эталонные выборки (labeled_sample.csv)
+│   ├── processed/                    # Массив признаков (final_dataset.csv)
+│   └── splits/                       # Групповые сплиты партий (train/val/test_game_ids.csv)
 │
 ├── src/
 │   └── chess_error_prediction/       # Основной Python-пакет
-│       ├── schemas.py                # Спецификация контракта данных (Data Contract)
-│       ├── engine/                   # Бэкендер 1 (Этапы 1, 3): запуск Stockfish и формат оценок
+│       ├── schemas.py                # Спецификация контракта данных (Pydantic / Data Contract)
+│       ├── engine/                   # Интеграция со Stockfish 19 UCI и анализ партий
 │       │   ├── stockfish_client.py
-│       │   └── evaluation.py
-│       ├── data/                     # Бэкендер 1 + 2 (Этапы 1, 2): загрузка, чтение и фильтрация PGN
+│       │   ├── evaluation.py
+│       │   ├── game_analysis.py
+│       │   └── stage3_eval_verifier.py
+│       ├── data/                     # Загрузка, чтение и фильтрация PGN
 │       │   ├── download.py
 │       │   ├── pgn_reader.py
 │       │   ├── game_filter.py
 │       │   └── validation.py
-│       ├── labeling/                 # Бэкендер 1 + 3 (Этап 3): centipawn loss и разметка ошибок
-│       │   └── error_labeler.py
-│       ├── features/                 # Пакет для Этапа 6 (извлечение признаков)
-│       ├── dataset/                  # Пакет для Этапа 8 (сборка датасета)
-│       ├── model/                    # Пакет для Этапа 9 (обучение XGBoost)
-│       └── experiments/              # Пакет для Этапа 10 (эксперименты)
+│       ├── labeling/                 # Centipawn loss, асимметричные маты и разметка ошибок
+│       │   ├── error_labeler.py
+│       │   └── stage5_target_verifier.py
+│       ├── features/                 # Экстракторы 14 признаков до хода и аудит утечек
+│       │   ├── extractors.py
+│       │   ├── feature_spec.py
+│       │   └── stage6_feature_verifier.py
+│       ├── dataset/                  # Групповое разбиение (GroupKFold) и проверка утечек
+│       │   ├── split.py
+│       │   └── checks.py
+│       ├── model/                    # Обучение XGBoost и калибровка (Этап 7)
+│       └── experiments/              # Проведение абляционных экспериментов (Этап 8)
 │
-├── scripts/                          # Директория сценариев запуска (начиная с Этапа 4)
+├── scripts/                          # Скрипты запуска пайплайнов и верификации
+│   ├── download_and_filter_stage2.py
+│   ├── verify_stage5_labeling.py
+│   ├── verify_stage6_features.py
+│   └── mwe.py                        # Minimal Working Example сквозного пайплайна
 │
-├── tests/                            # Набор автоматических тестов (Этапы 1–3)
-│   ├── test_engine.py                # Проверка конфигурации Stockfish и нормализации оценок
-│   ├── test_data.py                  # Проверка разбора контроля времени, чтения PGN и фильтрации
-│   ├── test_labeling.py              # Проверка расчета потери оценки, порогов и отсечения матов
-│   └── test_schemas.py               # Проверка схемы датасета и отсутствия target leakage
+├── tests/                            # Набор автоматических тестов (Этапы 1–6, 31 тест)
+│   ├── test_engine.py                # Проверка Stockfish UCI, детерминизма и таймаутов
+│   ├── test_data.py                  # Чтение PGN, фильтрация и схема данных
+│   ├── test_labeling.py              # Centipawn loss, пороги и асимметричная обработка матов
+│   ├── test_schemas.py               # Валидация контракта признаков и защита от утечек
+│   └── test_backend3_stages3_6.py    # Интеграционные тесты сплитов, GPU XGBoost и признаков
 │
-├── artifacts/                        # Директория для артефактов моделей и запусков (Этапы 9–10)
-└── reports/                          # Директория для отчетов, графиков и таблиц статьи
+├── artifacts/                        # Артефакты моделей, весов и запусков
+└── reports/                          # Таблицы, логи и графики исследования
+    └── tables/
+        ├── env_setup.log
+        ├── stage2_filtering_funnel.csv
+        ├── stage5_threshold_distribution.csv
+        └── stage6_feature_audit.json
 ```
 
 ---
 
-## 2. Итоги выполненных этапов (Этапы 1–3)
+## 2. Итоги выполненных этапов (Этапы 1–6)
 
 ### Этап 1. Подготовка окружения и параметров Stockfish
-- Зафиксирована точная версия движка для научной статьи: **Stockfish 19** (универсальный 64-битный исполняемый файл `bin/stockfish-windows-x86-64-universal.exe`).
-- Зафиксированы строгие параметры детерминированного анализа: глубина 18 полуходов, `threads = 1`, `hash = 128 MB`, таймаут 30 секунд, `mate_score_cp = 100000`, единый интерфейс получения оценок относительно белых (White POV).
-- Созданы базовые конфигурационные файлы: `config/config.yaml`, `requirements.txt`, `pyproject.toml`, `.env.example`.
+- Зафиксирована точная версия движка для исследования: **Stockfish 19** (`bin/stockfish-windows-x86-64-universal.exe`).
+- Зафиксирован строгий протокол детерминизма: `depth = 18`, `threads = 1`, `hash = 128 MB`, вызов `ucinewgame` перед каждой партией для очистки хэш-таблицы транспозиций.
+- Аппаратное окружение: Python 3.14.7, XGBoost 3.4.1 с поддержкой CUDA 13.4 (`tree_method='hist'`, GPU RTX 5060 Laptop GPU). Лог зафиксирован в `reports/tables/env_setup.log`.
 
 ### Этап 2. Сбор, фильтрация данных и спецификация датасета
-- Реализованы модули загрузки, чтения и потоковой фильтрации PGN:
-  - Потоковое чтение дампа Lichess 2026-09 без выкачки 29 ГБ через библиотеку `zstandard`.
-  - Комплекс из 12 фильтров: рапид ($\ge 10+0$), рейтинг ($1600 \le \text{Elo} \le 2800$), симметрия силы ($|\Delta\text{Elo}| \le 300$), длина ($10 \le \text{moves} \le 120$), отсечение ботов и нестандартных вариантов, исключение античит-банов.
-  - Криптографическая деперсонализация игроков (SHA-256) при сохранении точных меток оставшегося времени `[%clk]` и удалении серверных `[%eval]` (защита от target leakage).
-  - Сгенерирован артефакт партий [`data/raw/filtered_games.pgn`](data/raw/filtered_games.pgn) (500 партий, 1.15 МБ, ~35 000 позиций).
-  - Сформирован машинночитаемый реестр фильтрации: [`reports/tables/stage2_filtering_funnel.csv`](reports/tables/stage2_filtering_funnel.csv).
+- Реализован потоковый пайплайн фильтрации PGN из базы Lichess Rapid (2026-09) без распаковки гигантских архивов в RAM.
+- Сформирован чистый корпус из **500 партий** (35 550 полуходов) со 100% соблюдением правил FIDE, контролем времени Rapid ($\ge 600$ с), рейтингом обоих игроков $\ge 1800$, длиной $\ge 20$ ходов.
+- Обеспечено сохранение меток времени `[%clk]`, исключение серверных оценок `[%eval]` и деперсонализация игроков через SHA-256. Артефакты: `data/raw/filtered_games.pgn`, `reports/tables/stage2_filtering_funnel.csv`.
 
-### Этап 3. Фиксация формата оценок и проверка формирования целевой переменной
-- Реализован расчет потери оценки с учетом перспективы игрока:
-  - Для белых: $\text{loss} = \text{eval\_before} - \text{eval\_after}$.
-  - Для черных (White POV): $\text{loss} = \text{eval\_after} - \text{eval\_before}$.
-- Настроена бинарная целевая переменная: $is\_error = 1$ при $\text{loss} \ge 200$ cp (чувствительность: 150, 300 cp).
-- Исключение матовых позиций (`is_mate == True`) для предотвращения искажения метрик.
-- Добавлен аудит признаков на отсутствие утечки целевой информации (target leakage).
+### Этап 3. MVP пайплайна и разметка ошибок
+- Реализована функция Centipawn Loss: $\Delta \text{Eval} = \text{Eval}_{\text{before}} - \text{Eval}_{\text{after}}$ с проекцией на перспективу активного игрока (POV).
+- Внедрен **асимметричный протокол матовых позиций**: позиции, где игрок допускает мат сопернику из нематовой ситуации, размечаются как грубая ошибка ($y=1, \text{loss}=2500$ cp); ходы, форсирующие собственный мат, не штрафуются ($y=0$); позиции, где мат уже стоял до хода, изолируются.
+- Сформирован эталонный датасет `data/interim/labeled_sample.csv` (15 верифицированных позиций).
+
+### Этап 4. Формирование признакового пространства
+- Разработан набор из **14 признаков строго до совершения хода** (Zero Feature Leakage):
+  - Оценочные: `eval_before`, `eval_diff_prev_move` (с инверсией знака для черных).
+  - Материальные и досочные: `material_balance` (POV), `piece_count`, `pawn_count`.
+  - Тактическая напряженность: `legal_checks_count`, `legal_captures_count`, `attacked_pieces_count`.
+  - Метаданные: `game_phase`, `player_rating`, `opponent_rating`, `rating_diff`, `time_control_base`, `time_control_inc`.
+- Сквозной пайплайн подтвержден в `scripts/mwe.py`.
+
+### Этап 5. Вычислительные затраты и баланс классов
+- Замерено реальное время вызова Stockfish: **195.9 мс/позиция**.
+- Сформирована таблица распределения порогов ошибки (150, 200, 300 cp) в `reports/tables/stage5_threshold_distribution.csv`.
+- Разработан валидатор меток `src/chess_error_prediction/labeling/stage5_target_verifier.py`.
+
+### Этап 6. Подготовка выборок и аудит утечек
+- Проведено разделение по независимым партиям (`game_id`) в пропорции 70% / 15% / 15%:
+  - Train: 350 партий (`data/splits/train_game_ids.csv`).
+  - Validation: 75 партий (`data/splits/val_game_ids.csv`).
+  - Test: 75 партий (`data/splits/test_game_ids.csv`).
+- Доказано отсутствие пересечения множеств партий между сплитами ($\text{Train} \cap \text{Val} = \emptyset$, $\text{Train} \cap \text{Test} = \emptyset$, $\text{Val} \cap \text{Test} = \emptyset$).
+- Пройден аудит признаков на утечки (`reports/tables/stage6_feature_audit.json`).
 
 ---
 
-## 3. Установка зависимостей
+## 3. Установка и запуск
 
-Установите зависимости через pip:
-
+### 3.1. Установка зависимостей
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Запуск тестов этапов 1–3
-
+### 3.2. Запуск автоматических тестов
 ```bash
-python -m pytest tests -v
+python -m pytest
 ```
 
-## 5. Проверка Stockfish и анализ партии
-
-Stockfish устанавливается отдельно от Python-пакетов. Укажите путь к
-исполняемому файлу через `STOCKFISH_PATH` (или оставьте `stockfish`, если он
-добавлен в `PATH`):
-
-```python
-import chess.pgn
-from chess_error_prediction.engine import StockfishConfig, StockfishEngine, analyze_game
-
-with open("data/raw/game.pgn", encoding="utf-8") as handle:
-    game = chess.pgn.read_game(handle)
-
-with StockfishEngine(StockfishConfig.from_environment()) as engine:
-    print(engine.verify())
-    records = list(analyze_game(game, engine, threshold_cp=200))
+### 3.3. Запуск минимального рабочего примера (MWE)
+```bash
+python scripts/mwe.py
 ```
-
-`analyze_game` оценивает каждую позицию до и после хода на фиксированной
-глубине (по умолчанию 18), сохраняет матовые оценки отдельно и рассчитывает
-потерю в сантипешках с точки зрения игрока, который сделал ход.
