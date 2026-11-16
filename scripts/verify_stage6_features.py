@@ -21,18 +21,36 @@ def run_stage6_verification():
     print("STAGE 6: FEATURE SPACE & TARGET LEAKAGE AUDIT (BACKEND 3)")
     print("=" * 80)
 
+    import chess
+    from chess_error_prediction.features.extractors import extract_all_features
+
     dataset_path = ROOT_DIR / "data" / "processed" / "final_dataset.csv"
     if not dataset_path.exists():
-        print(f"[INFO] {dataset_path} not found. Running audit on labeled sample...")
-        dataset_path = ROOT_DIR / "data" / "interim" / "labeled_sample.csv"
+        print(f"[INFO] {dataset_path} not found. Extracting complete research feature set for labeled sample...")
+        sample_path = ROOT_DIR / "data" / "interim" / "labeled_sample.csv"
+        df_raw = pd.read_csv(sample_path)
+        rows = []
+        for _, r in df_raw.iterrows():
+            board = chess.Board(r["fen_before"])
+            ev_white = float(r["eval_before_white"])
+            ev_player = ev_white if board.turn == chess.WHITE else -ev_white
+            feats = extract_all_features(
+                board,
+                eval_before_player_pov=ev_player,
+                eval_diff_prev_move=0.0,
+                white_elo=2000.0,
+                black_elo=2000.0,
+                has_prev_move=bool(r["ply"] > 1),
+            )
+            rows.append(feats)
+        df = pd.DataFrame(rows)
+        print(f"Constructed audit DataFrame with {len(df)} positions and {len(ALL_FEATURES)} features.")
+    else:
+        df = pd.read_csv(dataset_path)
+        print(f"Loaded dataset for feature audit: {dataset_path.name} ({len(df)} rows)")
 
-    df = pd.read_csv(dataset_path)
-    print(f"Loaded dataset for feature audit: {dataset_path.name} ({len(df)} rows)")
-
-    # Evaluate all features available in the dataset
-    features_to_audit = [f for f in ALL_FEATURES if f in df.columns]
-    if not features_to_audit:
-        features_to_audit = [c for c in df.columns if c not in ["game_id", "position_id", "fen_before", "move_played", "human_expert_verification", "blunder_category", "is_error", "eval_loss", "eval_after_white"]]
+    # Evaluate all 16 features from research specification
+    features_to_audit = ALL_FEATURES
 
     report = audit_features_for_xgboost(df, features_to_audit)
 

@@ -56,7 +56,7 @@ def audit_features_for_xgboost(df: pd.DataFrame, feature_cols: List[str]) -> Dic
     X = df[feature_cols]
 
     # Dtype check
-    non_numeric = [col for col, dt in X.dtypes.items() if not np.issubdtype(dt, np.number)]
+    non_numeric = [col for col, dt in X.dtypes.items() if not pd.api.types.is_numeric_dtype(dt)]
 
     # Null / NaN check
     null_counts = X.isnull().sum().to_dict()
