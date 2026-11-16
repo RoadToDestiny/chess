@@ -70,7 +70,7 @@ def label_position_evaluations(
 ) -> Dict[str, Any]:
     """
     Integrates raw Stockfish evaluations for before and after move,
-    producing eval_loss, is_mate_eval, is_mate_error, and is_error.
+    producing eval_loss, is_mate_eval, and is_error.
 
     Asymmetric mate handling protocol:
     1. Pre-move forced mate (eval_before is mate): position is already decided,
@@ -90,45 +90,37 @@ def label_position_evaluations(
         loss = None
         is_error = 0
         is_mate_eval = True
-        is_mate_error = False
     elif is_mate_after:
         mate_in = eval_after.get("mate_in")
         # In White POV: positive mate_in means White mates; negative means Black mates
         if mate_in is not None:
             opponent_mates = (mate_in < 0) if is_white else (mate_in > 0)
-        elif score_after is not None:
-            # Fallback to score_after if mate_in is absent
-            opponent_mates = (score_after < 0) if is_white else (score_after > 0)
         else:
-            opponent_mates = True
+            # Fallback to score_after if mate_in is absent
+            opponent_mates = (score_after < 0) if is_white else (score_after > 0) if score_after is not None else True
 
         if opponent_mates:
             loss = float(max_clamped_loss)
             is_error = 1
             is_mate_eval = False
-            is_mate_error = True
         else:
             loss = 0.0
             is_error = 0
             is_mate_eval = False
-            is_mate_error = False
     elif score_after is None:
         loss = None
         is_error = 0
         is_mate_eval = False
-        is_mate_error = False
     else:
         loss = compute_centipawn_loss(float(score_before), float(score_after), color)
         is_error = assign_blunder_label(loss, threshold_cp=threshold_cp)
         is_mate_eval = False
-        is_mate_error = False
 
     return {
         "eval_before": score_before,
         "eval_after": score_after,
         "eval_loss": loss,
         "is_mate_eval": is_mate_eval,
-        "is_mate_error": is_mate_error,
         "is_error": is_error,
     }
 
@@ -147,13 +139,10 @@ def filter_mate_records(
     filtered = df[~df[mate_col].fillna(False)].copy()
     excluded = total - len(filtered)
     pct = (excluded / total * 100.0) if total > 0 else 0.0
-    mate_errors = int(df.get("is_mate_error", pd.Series(False, index=df.index)).fillna(False).sum())
 
     return filtered, {
         "total": total,
         "excluded": excluded,
-        "saved_mate_errors": mate_errors,
-        "excluded_other_mates": excluded,
         "pct_excluded": round(pct, 2),
     }
 

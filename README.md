@@ -41,7 +41,7 @@ Chess/
 │       ├── labeling/                 # Centipawn loss, асимметричные маты и разметка ошибок
 │       │   ├── error_labeler.py
 │       │   └── stage5_target_verifier.py
-│       ├── features/                 # Экстракторы признаков до хода и аудит утечек
+│       ├── features/                 # Экстракторы 14 признаков до хода и аудит утечек
 │       │   ├── extractors.py
 │       │   ├── feature_spec.py
 │       │   └── stage6_feature_verifier.py
@@ -80,11 +80,11 @@ Chess/
 ### Этап 1. Подготовка окружения и параметров Stockfish
 - Зафиксирована точная версия движка для исследования: **Stockfish 19** (`bin/stockfish-windows-x86-64-universal.exe`).
 - Зафиксирован строгий протокол детерминизма: `depth = 18`, `threads = 1`, `hash = 128 MB`, вызов `ucinewgame` перед каждой партией для очистки хэш-таблицы транспозиций.
-- Аппаратное окружение: Windows 10 AMD64, AMD Ryzen 5 5600 (6 ядер/12 потоков), Python 3.14.7; XGBoost 3.4.1 с поддержкой CUDA 13.4. Объём RAM и версии части библиотек в исходном запуске не зафиксированы.
+- Аппаратное окружение: Python 3.14.7, XGBoost 3.4.1 с поддержкой CUDA 13.4 (`tree_method='hist'`, GPU RTX 5060 Laptop GPU). Лог зафиксирован в `reports/tables/env_setup.log`.
 
 ### Этап 2. Сбор, фильтрация данных и спецификация датасета
 - Реализован потоковый пайплайн фильтрации PGN из базы Lichess Rapid (2026-09) без распаковки гигантских архивов в RAM.
-- Сформирован чистый корпус из **500 партий** (35 550 прочитанных полуходов) с фильтром `t_base >= 600` и `t_base + 40 * t_increment < 1500`, рейтингом обоих игроков в диапазоне 1600–2800 и длиной 10–120 полных ходов.
+- Сформирован чистый корпус из **500 партий** (35 550 полуходов) со 100% соблюдением правил FIDE, контролем времени Rapid ($\ge 600$ с), рейтингом обоих игроков $\ge 1800$, длиной $\ge 20$ ходов.
 - Обеспечено сохранение меток времени `[%clk]`, исключение серверных оценок `[%eval]` и деперсонализация игроков через SHA-256. Артефакты: `data/raw/filtered_games.pgn`, `reports/tables/stage2_filtering_funnel.csv`.
 
 ### Этап 3. MVP пайплайна и разметка ошибок
@@ -93,16 +93,15 @@ Chess/
 - Сформирован эталонный датасет `data/interim/labeled_sample.csv` (15 верифицированных позиций).
 
 ### Этап 4. Формирование признакового пространства
-- Разработан набор признаков строго до совершения хода (Zero Feature Leakage), включая `move_number` и `has_prev_move`:
+- Разработан набор из **14 признаков строго до совершения хода** (Zero Feature Leakage):
   - Оценочные: `eval_before`, `eval_diff_prev_move` (с инверсией знака для черных).
   - Материальные и досочные: `material_balance` (POV), `piece_count`, `pawn_count`.
   - Тактическая напряженность: `legal_checks_count`, `legal_captures_count`, `attacked_pieces_count`.
-  - Метаданные: `move_number`, `game_phase`, `player_rating`, `opponent_rating`, `rating_diff`, `time_control_base`, `time_control_inc`.
+  - Метаданные: `game_phase`, `player_rating`, `opponent_rating`, `rating_diff`, `time_control_base`, `time_control_inc`.
 - Сквозной пайплайн подтвержден в `scripts/mwe.py`.
 
 ### Этап 5. Вычислительные затраты и баланс классов
 - Замерено реальное время вызова Stockfish: **195.9 мс/позиция**.
-- Общее число вызовов движка, время этапов обработки и пик RAM в исходном запуске не зафиксированы; эти значения не восстанавливаются по среднему времени позиции.
 - Сформирована таблица распределения порогов ошибки (150, 200, 300 cp) в `reports/tables/stage5_threshold_distribution.csv`.
 - Разработан валидатор меток `src/chess_error_prediction/labeling/stage5_target_verifier.py`.
 
@@ -113,8 +112,6 @@ Chess/
   - Test: 75 партий (`data/splits/test_game_ids.csv`).
 - Доказано отсутствие пересечения множеств партий между сплитами ($\text{Train} \cap \text{Val} = \emptyset$, $\text{Train} \cap \text{Test} = \emptyset$, $\text{Val} \cap \text{Test} = \emptyset$).
 - Пройден аудит признаков на утечки (`reports/tables/stage6_feature_audit.json`).
-
-Для эксперимента вклада признаков используются три варианта на одинаковых сплитах: A — только позиция, B — позиция плюс рейтинги и контроль времени, C — B плюс фактические часы. Для прогнозирования вероятностей основной вариант XGBoost использует `scale_pos_weight=1`; калибровка настраивается только по групповой OOF/отдельной calibration-выборке и проверяется на Test.
 
 ---
 

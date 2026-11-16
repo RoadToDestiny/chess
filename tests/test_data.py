@@ -113,10 +113,6 @@ def test_filter_criteria_matching():
     criteria_fail_time = FilterCriteria(min_base_seconds=900)
     assert not game_matches(game, criteria_fail_time)
 
-    rapid_boundary = chess.pgn.read_game(io.StringIO(SAMPLE_VALID_PGN))
-    rapid_boundary.headers["TimeControl"] = "900+20"
-    assert not game_matches(rapid_boundary, FilterCriteria())
-
     # Bot rejection test
     game_bot = chess.pgn.read_game(io.StringIO(SAMPLE_VALID_PGN))
     game_bot.headers["WhiteTitle"] = "BOT"

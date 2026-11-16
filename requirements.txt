@@ -1,16 +1,16 @@
 # Unified Dependencies for Chess Error Prediction Project
 # Core Chess & Data Handling
-python-chess==1.999
-pandas==3.1.1
-numpy==2.5.5
-zstandard==0.25.0
-requests==2.34.2
-pyyaml==6.0.3
+python-chess>=1.10.0
+pandas>=2.2.0
+numpy>=2.0.0
+zstandard>=0.22.0
+requests>=2.31.0
+pyyaml>=6.0.1
 
 # Machine Learning & Visualization
-xgboost==3.4.1
-scikit-learn==1.9.1
-matplotlib==3.11.2
+xgboost>=3.0.0
+scikit-learn>=1.5.0
+matplotlib>=3.9.0
 
 # Testing & Quality
-pytest==9.2.0
+pytest>=8.0.0
