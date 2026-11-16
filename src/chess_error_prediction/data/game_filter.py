@@ -18,6 +18,7 @@ class FilterCriteria:
     max_elo: Optional[int] = 2800
     max_elo_diff: Optional[int] = 300
     min_base_seconds: Optional[int] = 600
+    max_rapid_duration_seconds: Optional[int] = 1500
     allowed_time_controls: Optional[Tuple[str, ...]] = None
     min_full_moves: Optional[int] = 10
     max_full_moves: Optional[int] = 120
@@ -48,7 +49,8 @@ def game_matches(game: chess.pgn.Game, criteria: FilterCriteria) -> bool:
     Checks if a valid chess game matches all specified criteria:
     - Standard chess variant only (no Chess960, Atomic, Antichess)
     - Human vs Human only (no BOT accounts)
-    - Valid time control (>= min_base_seconds)
+    - Rapid time control: base + 40 * increment < max_rapid_duration_seconds
+      and base >= min_base_seconds
     - Player ratings within [min_elo, max_elo]
     - Game length within [min_full_moves, max_full_moves]
     """
@@ -66,11 +68,16 @@ def game_matches(game: chess.pgn.Game, criteria: FilterCriteria) -> bool:
         return False
 
     try:
-        base_sec, _ = parse_time_control(time_control)
+        base_sec, increment_sec = parse_time_control(time_control)
     except ValueError:
         return False
 
     if criteria.min_base_seconds is not None and base_sec < criteria.min_base_seconds:
+        return False
+    if (
+        criteria.max_rapid_duration_seconds is not None
+        and base_sec + 40 * increment_sec >= criteria.max_rapid_duration_seconds
+    ):
         return False
 
     white_elo = _get_elo(game, "WhiteElo")

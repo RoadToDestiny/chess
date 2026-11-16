@@ -96,12 +96,14 @@ def extract_features_row_backend2(board: chess.Board, metadata: dict, eval_befor
     return {
         "eval_before": float(eval_before_player),
         "eval_diff_prev_move": float(eval_diff_prev),
+        "has_prev_move": 0 if board.ply() == 0 else 1,
         "material_balance": mat_bal,
         "piece_count": int(piece_count),
         "pawn_count": int(pawn_count),
         "legal_checks_count": int(legal_checks),
         "legal_captures_count": int(legal_captures),
         "attacked_pieces_count": int(attacked_pieces),
+        "move_number": int(fullmove),
         "game_phase": int(game_phase),
         "player_rating": float(p_elo),
         "opponent_rating": float(o_elo),
@@ -177,7 +179,7 @@ def run_mwe():
     # Step 3 (Backend 2): Build feature row before move
     metadata = dict(game.headers)
     feature_row = extract_features_row_backend2(board, metadata, score_before_white, prev_eval_white=0.0)
-    print("[Backend 2] Feature row extracted from position (14 pre-move features):")
+    print("[Backend 2] Feature row extracted from position (16 pre-move features):")
     for k, v in feature_row.items():
         print(f"   - {k}: {v}")
 

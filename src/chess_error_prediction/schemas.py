@@ -18,12 +18,14 @@ METADATA_COLUMNS: List[str] = [
 POSITION_FEATURES: List[str] = [
     "eval_before",
     "eval_diff_prev_move",
+    "has_prev_move",
     "material_balance",
     "piece_count",
     "pawn_count",
     "legal_checks_count",
     "legal_captures_count",
     "attacked_pieces_count",
+    "move_number",
     "game_phase",
 ]
 
@@ -44,7 +46,9 @@ TARGET_COLUMNS: List[str] = [
 OPTIONAL_COLUMNS: List[str] = [
     "fen",
     "clock_remaining",
+    "time_spent_prev_move",
     "is_mate_eval",
+    "is_mate_error",
 ]
 
 ALL_FEATURES: List[str] = POSITION_FEATURES + META_FEATURES
@@ -68,6 +72,7 @@ class PositionRecord:
     legal_checks_count: int
     legal_captures_count: int
     attacked_pieces_count: int
+    has_prev_move: int
     game_phase: int
 
     # Player & Time Features
@@ -82,8 +87,10 @@ class PositionRecord:
     eval_loss: Optional[float] = None
     is_error: int = 0
     is_mate_eval: bool = False
+    is_mate_error: bool = False
     fen: Optional[str] = None
     clock_remaining: Optional[float] = None
+    time_spent_prev_move: Optional[float] = None
 
     @property
     def position_id(self) -> str:
@@ -99,6 +106,7 @@ class PositionRecord:
             "color": self.color,
             "eval_before": self.eval_before,
             "eval_diff_prev_move": self.eval_diff_prev_move,
+            "has_prev_move": self.has_prev_move,
             "material_balance": self.material_balance,
             "piece_count": self.piece_count,
             "pawn_count": self.pawn_count,
@@ -115,6 +123,8 @@ class PositionRecord:
             "eval_loss": self.eval_loss,
             "is_error": self.is_error,
             "is_mate_eval": self.is_mate_eval,
+            "is_mate_error": self.is_mate_error,
             "fen": self.fen,
             "clock_remaining": self.clock_remaining,
+            "time_spent_prev_move": self.time_spent_prev_move,
         }

@@ -26,6 +26,7 @@ class MoveAnalysis:
     evaluation_after: EvaluationResult
     eval_loss: Optional[float]
     is_mate_eval: bool
+    is_mate_error: bool
     is_error: int
 
 
@@ -86,5 +87,6 @@ def analyze_game(
             evaluation_after=evaluation_after,
             eval_loss=label["eval_loss"],
             is_mate_eval=label["is_mate_eval"],
+            is_mate_error=label["is_mate_error"],
             is_error=label["is_error"],
         )

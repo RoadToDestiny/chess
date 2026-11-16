@@ -1,5 +1,5 @@
 filter_name,pgn_tag,condition,scientific_justification,action
-Time Control Minimum,TimeControl,base_seconds >= 600,Filters out bullet and blitz to focus on cognitive decision-making rather than mouse slips,Reject game
+Time Control Rapid,TimeControl,base_seconds >= 600 AND base_seconds + 40 * increment_seconds < 1500,Operational Rapid-like filter used by the code,Reject game
 Player Rating Bounds,WhiteElo/BlackElo,1600 <= elo <= 2800,Eliminates beginners with chaotic play and isolates established human players,Reject game
 Rating Gap Constraint,WhiteElo/BlackElo,|WhiteElo - BlackElo| <= 300,Prevents highly asymmetric games with psychological distortion or speculative play,Reject game
 Bot Account Exclusion,WhiteTitle/BlackTitle,Title != 'BOT',Ensures 100% human games by excluding computer engine accounts,Reject game

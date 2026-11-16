@@ -38,7 +38,7 @@ def test_stage1_xgboost_gpu_acceleration():
     """Verify GPU-accelerated training (NVIDIA CUDA) with XGBoost on tabular features."""
     import numpy as np
     import xgboost as xgb
-    X = np.random.randn(25, 14).astype(np.float32)
+    X = np.random.randn(25, len(ALL_FEATURES)).astype(np.float32)
     y = np.random.randint(0, 2, 25).astype(np.int32)
     clf = xgb.XGBClassifier(n_estimators=3, tree_method="hist", device="cuda", random_state=42)
     clf.fit(X, y)
@@ -69,8 +69,9 @@ def test_stage3_evaluation_perspective_white_and_black():
 
 def test_stage3_mate_isolation_protocol():
     mate_res = verify_mate_isolation_protocol(is_mate_before=False, is_mate_after=True)
-    assert mate_res["is_mate_eval"] is True
-    assert mate_res["exclude_from_cp_loss"] is True
+    assert mate_res["is_mate_eval"] is False
+    assert mate_res["is_mate_error"] is True
+    assert mate_res["exclude_from_cp_loss"] is False
 
 
 def test_stage3_env_setup_log_artifact(tmp_path: Path):
@@ -138,12 +139,14 @@ def test_stage6_xgboost_compatibility_audit():
     df_clean = pd.DataFrame({
         "eval_before": [10.0, -20.0],
         "eval_diff_prev_move": [5.0, -10.0],
+        "has_prev_move": [1, 1],
         "material_balance": [0.0, 1.0],
         "piece_count": [14, 13],
         "pawn_count": [8, 7],
         "legal_checks_count": [0, 1],
         "legal_captures_count": [1, 2],
         "attacked_pieces_count": [0, 1],
+        "move_number": [1, 11],
         "game_phase": [1, 2],
         "player_rating": [1800.0, 1850.0],
         "opponent_rating": [1820.0, 1800.0],

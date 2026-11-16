@@ -3,6 +3,7 @@ Standard evaluation representation and mate handling.
 """
 
 from dataclasses import dataclass
+import math
 from typing import Any, Dict, Optional, Union
 
 
@@ -33,6 +34,10 @@ def normalize_evaluation(
     score_cp = raw_eval.get("score_cp")
     if score_cp is not None:
         score_cp = float(score_cp)
+        if not math.isfinite(score_cp):
+            raise ValueError("Numeric engine evaluations must be finite.")
+        if not raw_eval.get("is_mate", False):
+            score_cp = max(-2500.0, min(2500.0, score_cp))
 
     return EvaluationResult(
         score_cp=score_cp,
