@@ -40,12 +40,14 @@ features:
   position_features:
     - "eval_before"
     - "eval_diff_prev_move"
+    - "has_prev_move"
     - "material_balance"
     - "piece_count"
     - "pawn_count"
     - "legal_checks_count"
     - "legal_captures_count"
     - "attacked_pieces_count"
+    - "move_number"
     - "game_phase"
   meta_features:
     - "player_rating"
@@ -53,10 +55,14 @@ features:
     - "rating_diff"
     - "time_control_base"
     - "time_control_inc"
+  dynamic_clock_features:
+    - "clock_remaining"
+    - "time_spent_prev_move"
 
 model:
   tree_method: "hist"
   device: "cuda"
+  scale_pos_weight: 1.0
   n_estimators: 200
   max_depth: 5
   learning_rate: 0.05

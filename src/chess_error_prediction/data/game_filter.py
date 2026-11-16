@@ -18,6 +18,8 @@ class FilterCriteria:
     max_elo: Optional[int] = 2800
     max_elo_diff: Optional[int] = 300
     min_base_seconds: Optional[int] = 600
+    max_base_seconds: Optional[int] = None
+    max_estimated_seconds: Optional[int] = None
     allowed_time_controls: Optional[Tuple[str, ...]] = None
     min_full_moves: Optional[int] = 10
     max_full_moves: Optional[int] = 120
@@ -66,11 +68,17 @@ def game_matches(game: chess.pgn.Game, criteria: FilterCriteria) -> bool:
         return False
 
     try:
-        base_sec, _ = parse_time_control(time_control)
+        base_sec, inc_sec = parse_time_control(time_control)
     except ValueError:
         return False
 
     if criteria.min_base_seconds is not None and base_sec < criteria.min_base_seconds:
+        return False
+
+    if criteria.max_base_seconds is not None and base_sec > criteria.max_base_seconds:
+        return False
+
+    if criteria.max_estimated_seconds is not None and (base_sec + 40 * inc_sec) >= criteria.max_estimated_seconds:
         return False
 
     white_elo = _get_elo(game, "WhiteElo")

@@ -96,12 +96,14 @@ def extract_features_row_backend2(board: chess.Board, metadata: dict, eval_befor
     return {
         "eval_before": float(eval_before_player),
         "eval_diff_prev_move": float(eval_diff_prev),
+        "has_prev_move": int(board.ply() > 0),
         "material_balance": mat_bal,
         "piece_count": int(piece_count),
         "pawn_count": int(pawn_count),
         "legal_checks_count": int(legal_checks),
         "legal_captures_count": int(legal_captures),
         "attacked_pieces_count": int(attacked_pieces),
+        "move_number": int(fullmove),
         "game_phase": int(game_phase),
         "player_rating": float(p_elo),
         "opponent_rating": float(o_elo),
@@ -177,11 +179,37 @@ def run_mwe():
     # Step 3 (Backend 2): Build feature row before move
     metadata = dict(game.headers)
     feature_row = extract_features_row_backend2(board, metadata, score_before_white, prev_eval_white=0.0)
-    print("[Backend 2] Feature row extracted from position (14 pre-move features):")
+    print(f"[Backend 2] Feature row extracted from position ({len(feature_row)} pre-move features):")
     for k, v in feature_row.items():
         print(f"   - {k}: {v}")
 
-    # Step 4 (Backend 3): Verify row in XGBoost pipeline
+    # Step 4: Simulate move execution & label target
+    first_move = list(game.mainline_moves())[0]
+    board.push(first_move)
+    eval_after = eval_func(board)
+    score_after_white = float(eval_after["score_cp"])
+    loss = compute_centipawn_loss(score_before_white, score_after_white, color="w")
+    is_error = assign_blunder_label(loss, threshold_cp=200.0)
+
+    dataset_sample_row = {
+        "game_id": metadata.get("Site", "").rstrip("/").split("/")[-1] or "mwe_sample_001",
+        "position_id": "mwe_sample_001_1",
+        "ply": 1,
+        "move_number": 1,
+        "color": "w",
+        "fen_before": chess.STARTING_FEN,
+        "played_move": first_move.uci(),
+        "eval_best_move": score_before_white,
+        "eval_after": score_after_white,
+        "eval_loss": loss,
+        "is_error": is_error,
+        **feature_row,
+    }
+    print("\n[MWE Sample Dataset Row (Full End-to-End Pipeline Artifact)]:")
+    for col, val in dataset_sample_row.items():
+        print(f"   {col:22s} : {val}")
+
+    # Step 5 (Backend 3): Verify row in XGBoost pipeline
     b3_report = verify_stage4_backend3(feature_row)
     print("\n[Backend 3 Verification]")
     print(f"   - Schema & Leakage Status:       {b3_report['status']}")

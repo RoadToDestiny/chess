@@ -86,6 +86,8 @@ def label_position_evaluations(
     score_before = eval_before.get("score_cp")
     score_after = eval_after.get("score_cp")
 
+    is_mate_error = False
+
     if is_mate_before or score_before is None:
         loss = None
         is_error = 0
@@ -103,10 +105,12 @@ def label_position_evaluations(
             loss = float(max_clamped_loss)
             is_error = 1
             is_mate_eval = False
+            is_mate_error = True
         else:
             loss = 0.0
             is_error = 0
             is_mate_eval = False
+            is_mate_error = False
     elif score_after is None:
         loss = None
         is_error = 0
@@ -121,6 +125,7 @@ def label_position_evaluations(
         "eval_after": score_after,
         "eval_loss": loss,
         "is_mate_eval": is_mate_eval,
+        "is_mate_error": is_mate_error,
         "is_error": is_error,
     }
 

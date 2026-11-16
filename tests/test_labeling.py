@@ -54,6 +54,7 @@ def test_asymmetric_mate_blunder_labeling():
     assert res_w_blunder["is_error"] == 1
     assert res_w_blunder["eval_loss"] == 2500.0
     assert res_w_blunder["is_mate_eval"] is False
+    assert res_w_blunder["is_mate_error"] is True
 
     # 2. White delivers checkmate: eval_after White mates in 1 (mate_in = +1)
     eval_after_mate_white = {"score_cp": 100000.0, "is_mate": True, "mate_in": 1, "depth": 18}
@@ -61,6 +62,7 @@ def test_asymmetric_mate_blunder_labeling():
     assert res_w_win["is_error"] == 0
     assert res_w_win["eval_loss"] == 0.0
     assert res_w_win["is_mate_eval"] is False
+    assert res_w_win["is_mate_error"] is False
 
     # 3. Position before move was already forced mate: excluded with is_mate_eval = True
     eval_before_already_mate = {"score_cp": -100000.0, "is_mate": True, "mate_in": -1, "depth": 18}
@@ -68,6 +70,7 @@ def test_asymmetric_mate_blunder_labeling():
     assert res_already_mate["is_mate_eval"] is True
     assert res_already_mate["is_error"] == 0
     assert res_already_mate["eval_loss"] is None
+    assert res_already_mate["is_mate_error"] is False
 
 
 def test_mate_filtering():

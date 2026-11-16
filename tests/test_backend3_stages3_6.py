@@ -38,7 +38,7 @@ def test_stage1_xgboost_gpu_acceleration():
     """Verify GPU-accelerated training (NVIDIA CUDA) with XGBoost on tabular features."""
     import numpy as np
     import xgboost as xgb
-    X = np.random.randn(25, 14).astype(np.float32)
+    X = np.random.randn(25, len(ALL_FEATURES)).astype(np.float32)
     y = np.random.randint(0, 2, 25).astype(np.int32)
     clf = xgb.XGBClassifier(n_estimators=3, tree_method="hist", device="cuda", random_state=42)
     clf.fit(X, y)
@@ -68,9 +68,17 @@ def test_stage3_evaluation_perspective_white_and_black():
 
 
 def test_stage3_mate_isolation_protocol():
-    mate_res = verify_mate_isolation_protocol(is_mate_before=False, is_mate_after=True)
-    assert mate_res["is_mate_eval"] is True
-    assert mate_res["exclude_from_cp_loss"] is True
+    # Pre-move mate is isolated
+    pre_mate_res = verify_mate_isolation_protocol(is_mate_before=True, is_mate_after=True)
+    assert pre_mate_res["is_mate_eval"] is True
+    assert pre_mate_res["is_mate_error"] is False
+    assert pre_mate_res["exclude_from_cp_loss"] is True
+
+    # Post-move blunder into mate is preserved as blunder
+    post_mate_res = verify_mate_isolation_protocol(is_mate_before=False, is_mate_after=True)
+    assert post_mate_res["is_mate_eval"] is False
+    assert post_mate_res["is_mate_error"] is True
+    assert post_mate_res["exclude_from_cp_loss"] is False
 
 
 def test_stage3_env_setup_log_artifact(tmp_path: Path):
@@ -138,12 +146,14 @@ def test_stage6_xgboost_compatibility_audit():
     df_clean = pd.DataFrame({
         "eval_before": [10.0, -20.0],
         "eval_diff_prev_move": [5.0, -10.0],
+        "has_prev_move": [1, 1],
         "material_balance": [0.0, 1.0],
         "piece_count": [14, 13],
         "pawn_count": [8, 7],
         "legal_checks_count": [0, 1],
         "legal_captures_count": [1, 2],
         "attacked_pieces_count": [0, 1],
+        "move_number": [1, 11],
         "game_phase": [1, 2],
         "player_rating": [1800.0, 1850.0],
         "opponent_rating": [1820.0, 1800.0],
@@ -155,3 +165,69 @@ def test_stage6_xgboost_compatibility_audit():
     assert report["status"] == "PASS"
     assert report["total_null_entries"] == 0
     assert report["is_leakage_free"] is True
+
+
+def test_grouped_calibration_uses_oof_predictions():
+    from chess_error_prediction.model.calibration import (
+        evaluate_calibrators,
+        fit_grouped_calibrators,
+    )
+    from sklearn.linear_model import LogisticRegression
+
+    X = pd.DataFrame({"signal": np.linspace(-2.0, 2.0, 24)})
+    y = (X["signal"].to_numpy() > 0).astype(int)
+    groups = np.repeat(np.arange(8), 3)
+    result = fit_grouped_calibrators(
+        X,
+        y,
+        groups,
+        estimator_factory=lambda: LogisticRegression(max_iter=500),
+        n_splits=4,
+    )
+
+    assert result.fold_count == 4
+    assert np.isfinite(result.oof_probability).all()
+    metrics = evaluate_calibrators(result, X, y)
+    assert set(metrics) == {"uncalibrated", "platt", "isotonic"}
+
+
+def test_logistic_regression_pipeline_spec_and_leakage_free_fit():
+    from chess_error_prediction.model.baseline_lr import (
+        create_logistic_regression_pipeline,
+        get_lr_feature_lists,
+    )
+
+    numeric_cols, categorical_cols, dropped_cols = get_lr_feature_lists(ALL_FEATURES)
+    assert "rating_diff" in dropped_cols
+    assert "game_phase" in categorical_cols
+    assert "move_number" in numeric_cols
+    assert "has_prev_move" in numeric_cols
+
+    # Synthesize small dataset
+    n_samples = 30
+    df = pd.DataFrame({
+        "eval_before": np.random.randn(n_samples),
+        "eval_diff_prev_move": np.random.randn(n_samples),
+        "has_prev_move": np.random.choice([0, 1], n_samples),
+        "material_balance": np.random.randn(n_samples),
+        "piece_count": np.random.randint(4, 30, n_samples),
+        "pawn_count": np.random.randint(2, 16, n_samples),
+        "legal_checks_count": np.random.randint(0, 3, n_samples),
+        "legal_captures_count": np.random.randint(0, 5, n_samples),
+        "attacked_pieces_count": np.random.randint(0, 4, n_samples),
+        "move_number": np.random.randint(1, 50, n_samples),
+        "game_phase": np.random.choice([1, 2, 3], n_samples),
+        "player_rating": np.random.uniform(1600, 2400, n_samples),
+        "opponent_rating": np.random.uniform(1600, 2400, n_samples),
+        "rating_diff": np.zeros(n_samples),  # Dependent collinear column
+        "time_control_base": np.full(n_samples, 600.0),
+        "time_control_inc": np.zeros(n_samples),
+    })
+    y = np.random.randint(0, 2, n_samples)
+
+    pipeline = create_logistic_regression_pipeline(ALL_FEATURES)
+    pipeline.fit(df, y)
+    probs = pipeline.predict_proba(df)
+    assert probs.shape == (n_samples, 2)
+    assert np.all(probs >= 0.0) and np.all(probs <= 1.0)
+

@@ -60,6 +60,7 @@ def extract_board_features(board: chess.Board) -> Dict[str, Any]:
         "legal_checks_count": legal_checks_count,
         "legal_captures_count": legal_captures_count,
         "attacked_pieces_count": attacked_pieces_count,
+        "move_number": int(board.fullmove_number),
         "attacked_pieces_value": attacked_pieces_value,
         "game_phase": game_phase,
     }
@@ -73,7 +74,9 @@ def extract_all_features(
     black_elo: float,
     time_control_base: float = 600.0,
     time_control_inc: float = 0.0,
-    clock_remaining: Optional[float] = None
+    clock_remaining: Optional[float] = None,
+    time_spent_prev_move: Optional[float] = None,
+    has_prev_move: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Combines board features with evaluation and metadata features into a unified dictionary.
@@ -86,14 +89,18 @@ def extract_all_features(
     opponent_rating = float(black_elo if is_white else white_elo)
     rating_diff = player_rating - opponent_rating
 
+    previous_move_exists = (board.ply() > 0) if has_prev_move is None else bool(has_prev_move)
+
     features.update({
         "eval_before": float(eval_before_player_pov),
         "eval_diff_prev_move": float(eval_diff_prev_move),
+        "has_prev_move": int(previous_move_exists),
         "player_rating": player_rating,
         "opponent_rating": opponent_rating,
         "rating_diff": rating_diff,
         "time_control_base": float(time_control_base),
         "time_control_inc": float(time_control_inc),
         "clock_remaining": clock_remaining,
+        "time_spent_prev_move": time_spent_prev_move,
     })
     return features

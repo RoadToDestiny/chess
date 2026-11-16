@@ -18,12 +18,14 @@ METADATA_COLUMNS: List[str] = [
 POSITION_FEATURES: List[str] = [
     "eval_before",
     "eval_diff_prev_move",
+    "has_prev_move",
     "material_balance",
     "piece_count",
     "pawn_count",
     "legal_checks_count",
     "legal_captures_count",
     "attacked_pieces_count",
+    "move_number",
     "game_phase",
 ]
 
@@ -35,6 +37,11 @@ META_FEATURES: List[str] = [
     "time_control_inc",
 ]
 
+DYNAMIC_CLOCK_FEATURES: List[str] = [
+    "clock_remaining",
+    "time_spent_prev_move",
+]
+
 TARGET_COLUMNS: List[str] = [
     "eval_after",
     "eval_loss",
@@ -44,10 +51,13 @@ TARGET_COLUMNS: List[str] = [
 OPTIONAL_COLUMNS: List[str] = [
     "fen",
     "clock_remaining",
+    "time_spent_prev_move",
     "is_mate_eval",
+    "is_mate_error",
 ]
 
 ALL_FEATURES: List[str] = POSITION_FEATURES + META_FEATURES
+EXTENDED_FEATURES: List[str] = ALL_FEATURES + DYNAMIC_CLOCK_FEATURES
 ALL_REQUIRED_COLUMNS: List[str] = METADATA_COLUMNS + POSITION_FEATURES + META_FEATURES + TARGET_COLUMNS
 
 
@@ -62,6 +72,7 @@ class PositionRecord:
     # Features (known BEFORE move)
     eval_before: float
     eval_diff_prev_move: float
+    has_prev_move: int
     material_balance: float
     piece_count: int
     pawn_count: int
@@ -82,8 +93,10 @@ class PositionRecord:
     eval_loss: Optional[float] = None
     is_error: int = 0
     is_mate_eval: bool = False
+    is_mate_error: bool = False
     fen: Optional[str] = None
     clock_remaining: Optional[float] = None
+    time_spent_prev_move: Optional[float] = None
 
     @property
     def position_id(self) -> str:
@@ -99,6 +112,7 @@ class PositionRecord:
             "color": self.color,
             "eval_before": self.eval_before,
             "eval_diff_prev_move": self.eval_diff_prev_move,
+            "has_prev_move": self.has_prev_move,
             "material_balance": self.material_balance,
             "piece_count": self.piece_count,
             "pawn_count": self.pawn_count,
@@ -115,6 +129,8 @@ class PositionRecord:
             "eval_loss": self.eval_loss,
             "is_error": self.is_error,
             "is_mate_eval": self.is_mate_eval,
+            "is_mate_error": self.is_mate_error,
             "fen": self.fen,
             "clock_remaining": self.clock_remaining,
+            "time_spent_prev_move": self.time_spent_prev_move,
         }

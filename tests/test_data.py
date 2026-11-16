@@ -87,6 +87,27 @@ def test_clock_seconds_parsing():
     assert parse_clock_seconds("plain comment without clock") is None
 
 
+def test_extract_clock_features_uses_same_player_history():
+    from chess_error_prediction.data.pgn_reader import extract_clock_features
+
+    pgn = """[TimeControl "600+10"]
+
+1. e4 { [%clk 0:10:00] } e5 { [%clk 0:10:00] }
+2. Nf3 { [%clk 0:09:55] } Nc6 { [%clk 0:09:58] } *
+"""
+    game = chess.pgn.read_game(io.StringIO(pgn))
+    assert game is not None
+    clocks = extract_clock_features(game, 600, 10)
+    assert clocks[1]["clock_remaining"] == 600.0
+    assert clocks[1]["time_spent_prev_move"] is None
+    assert clocks[2]["clock_remaining"] == 600.0
+    assert clocks[2]["time_spent_prev_move"] is None
+    assert clocks[3]["clock_remaining"] == 600.0
+    assert clocks[3]["time_spent_prev_move"] == 10.0  # Time spent on 1. e4: 600 - 600 + 10 = 10.0
+    assert clocks[4]["clock_remaining"] == 600.0
+    assert clocks[4]["time_spent_prev_move"] == 10.0  # Time spent on 1... e5: 600 - 600 + 10 = 10.0
+
+
 def test_game_validation_valid_and_invalid():
     game_valid = chess.pgn.read_game(io.StringIO(SAMPLE_VALID_PGN))
     assert game_valid is not None
@@ -112,6 +133,12 @@ def test_filter_criteria_matching():
 
     criteria_fail_time = FilterCriteria(min_base_seconds=900)
     assert not game_matches(game, criteria_fail_time)
+
+    # Lichess rapid boundary test: 900+20 is 900 + 40*20 = 1700 >= 1500
+    rapid_boundary = chess.pgn.read_game(io.StringIO(SAMPLE_VALID_PGN))
+    rapid_boundary.headers["TimeControl"] = "900+20"
+    assert not game_matches(rapid_boundary, FilterCriteria(max_estimated_seconds=1500))
+    assert game_matches(rapid_boundary, FilterCriteria())  # Default base-only filter allows it
 
     # Bot rejection test
     game_bot = chess.pgn.read_game(io.StringIO(SAMPLE_VALID_PGN))

@@ -80,38 +80,46 @@ Chess/
 ### Этап 1. Подготовка окружения и параметров Stockfish
 - Зафиксирована точная версия движка для исследования: **Stockfish 19** (`bin/stockfish-windows-x86-64-universal.exe`).
 - Зафиксирован строгий протокол детерминизма: `depth = 18`, `threads = 1`, `hash = 128 MB`, вызов `ucinewgame` перед каждой партией для очистки хэш-таблицы транспозиций.
-- Аппаратное окружение: Python 3.14.7, XGBoost 3.4.1 с поддержкой CUDA 13.4 (`tree_method='hist'`, GPU RTX 5060 Laptop GPU). Лог зафиксирован в `reports/tables/env_setup.log`.
+- Аппаратное окружение: **AMD Ryzen 5 5600 6-Core Processor** (6 ядер, 12 потоков), **32 GB RAM**, **NVIDIA RTX 5060 Laptop GPU** (CUDA 13.4, `tree_method='hist'`), **Microsoft Windows 11 Pro 64-bit**, **Python 3.14.0**. Полный системный лог зафиксирован в `reports/tables/env_setup.log`.
+- Зафиксированы точные версии зависимостей в `requirements.txt` (`xgboost==3.4.1`, `scikit-learn==1.9.1`, `pandas==3.1.1`, `numpy==2.5.5`, `python-chess==1.11.2`).
 
 ### Этап 2. Сбор, фильтрация данных и спецификация датасета
-- Реализован потоковый пайплайн фильтрации PGN из базы Lichess Rapid (2026-09) без распаковки гигантских архивов в RAM.
-- Сформирован чистый корпус из **500 партий** (35 550 полуходов) со 100% соблюдением правил FIDE, контролем времени Rapid ($\ge 600$ с), рейтингом обоих игроков $\ge 1800$, длиной $\ge 20$ ходов.
+- Реализован потоковый пайплайн фильтрации PGN из базы Lichess (2026-09) без распаковки архивов в RAM.
+- Сформирован чистый корпус из **500 партий** (35 550 прочитанных полуходов) со 100% соблюдением правил FIDE, начальным контролем времени $t_{\text{base}} \ge 600$ с (98% рапид, 2% классика), квалификационным диапазоном обоих игроков 1600–2800 Glicko-2 и длиной 10–120 ходов.
 - Обеспечено сохранение меток времени `[%clk]`, исключение серверных оценок `[%eval]` и деперсонализация игроков через SHA-256. Артефакты: `data/raw/filtered_games.pgn`, `reports/tables/stage2_filtering_funnel.csv`.
 
 ### Этап 3. MVP пайплайна и разметка ошибок
 - Реализована функция Centipawn Loss: $\Delta \text{Eval} = \text{Eval}_{\text{before}} - \text{Eval}_{\text{after}}$ с проекцией на перспективу активного игрока (POV).
-- Внедрен **асимметричный протокол матовых позиций**: позиции, где игрок допускает мат сопернику из нематовой ситуации, размечаются как грубая ошибка ($y=1, \text{loss}=2500$ cp); ходы, форсирующие собственный мат, не штрафуются ($y=0$); позиции, где мат уже стоял до хода, изолируются.
-- Сформирован эталонный датасет `data/interim/labeled_sample.csv` (15 верифицированных позиций).
+- Внедрен **исчерпывающий протокол обработки матовых позиций**:
+  - позиции с форсированным матом до хода изолируются из обучения (420 позиций, 1.18%);
+  - зевок в форсированный мат соперника размечается как ошибка ($y=1$, `is_mate_error=True`, loss=2500 cp);
+  - форсирование собственного мата — успешный ход ($y=0$, loss=0 cp);
+  - упущенный соперником мат выбывает из сквозного датасета из-за фильтрации позиции до хода.
+- Сформирован эталонный датасет `data/interim/labeled_sample.csv` (15 верифицированных позиций для качественной иллюстрации таксономии ошибок).
 
-### Этап 4. Формирование признакового пространства
-- Разработан набор из **14 признаков строго до совершения хода** (Zero Feature Leakage):
-  - Оценочные: `eval_before`, `eval_diff_prev_move` (с инверсией знака для черных).
-  - Материальные и досочные: `material_balance` (POV), `piece_count`, `pawn_count`.
-  - Тактическая напряженность: `legal_checks_count`, `legal_captures_count`, `attacked_pieces_count`.
-  - Метаданные: `game_phase`, `player_rating`, `opponent_rating`, `rating_diff`, `time_control_base`, `time_control_inc`.
-- Сквозной пайплайн подтвержден в `scripts/mwe.py`.
+### Этап 4. Формирование признакового пространства и калибровка
+- Разработан набор признаков строго до совершения хода (Zero Feature Leakage) в рамках трёхступенчатого сравнительного анализа:
+  - **Вариант А (11 признаков позиции):** `eval_before`, `eval_diff_prev_move`, `has_prev_move`, `material_balance`, `piece_count`, `pawn_count`, `legal_checks_count`, `legal_captures_count`, `attacked_pieces_count` (включая пешки, без короля), `move_number` (полный ход), `game_phase`.
+  - **Вариант Б (16 признаков, основной):** Вариант А + метаданные `player_rating`, `opponent_rating`, `rating_diff`, `time_control_base`, `time_control_inc`.
+  - **Вариант В (18 признаков, расширенный):** Вариант Б + динамические часы `clock_remaining` и `time_spent_prev_move`.
+- Сквозной пайплайн подтвержден в `scripts/mwe.py` с выводом полной строки датасета со всеми метаданными, оценками и целевой меткой.
+- Реализована калибровка вероятностей (`calibration.py`): групповые OOF-прогнозы по партиям (`GroupKFold`), обучение калибраторов Платта и Isotonic, оценка на изолированном Test. Основной режим — `scale_pos_weight = 1.0`.
 
 ### Этап 5. Вычислительные затраты и баланс классов
-- Замерено реальное время вызова Stockfish: **195.9 мс/позиция**.
-- Сформирована таблица распределения порогов ошибки (150, 200, 300 cp) в `reports/tables/stage5_threshold_distribution.csv`.
-- Разработан валидатор меток `src/chess_error_prediction/labeling/stage5_target_verifier.py`.
+- Сформирован полный отчет о вычислительных затратах (`reports/tables/benchmark.json`): 36 050 вызовов Stockfish, 7 062 с время движка (195.9 мс/вызов), 7 135 с общее время сборки, 342.5 МБ пик RAM.
+- Рассчитано распределение классов при основном операционном пороге 200 cp: 31 040 обычных ходов (88.36%), 4 090 ошибок (11.64%), референсный `scale_pos_weight = 7.58` (рассчитан строго на Train).
+- Сформирована таблица чувствительности порогов (150, 200, 300 cp) в `reports/tables/stage5_threshold_distribution.csv`.
 
-### Этап 6. Подготовка выборок и аудит утечек
-- Проведено разделение по независимым партиям (`game_id`) в пропорции 70% / 15% / 15%:
-  - Train: 350 партий (`data/splits/train_game_ids.csv`).
-  - Validation: 75 партий (`data/splits/val_game_ids.csv`).
-  - Test: 75 партий (`data/splits/test_game_ids.csv`).
+### Этап 6. Подготовка выборок, аудит утечек и baseline LogisticRegression
+- Проведено разделение по независимым партиям (`game_id`) в пропорции 70% / 15% / 15% с строгим разделением сырых полуходов и валидных строк (`reports/tables/dataset_row_counts.csv`):
+  - Train: 350 партий, 25 253 полухода $\to$ **24 955 валидных строк** (`data/splits/train_game_ids.csv`).
+  - Validation: 75 партий, 5 095 полуходов $\to$ **5 034 валидные строки** (`data/splits/val_game_ids.csv`).
+  - Test: 75 партий, 5 202 полухода $\to$ **5 141 валидная строка** (`data/splits/test_game_ids.csv`).
 - Доказано отсутствие пересечения множеств партий между сплитами ($\text{Train} \cap \text{Val} = \emptyset$, $\text{Train} \cap \text{Test} = \emptyset$, $\text{Val} \cap \text{Test} = \emptyset$).
 - Пройден аудит признаков на утечки (`reports/tables/stage6_feature_audit.json`).
+- Реализован модуль baseline-модели `LogisticRegression` (`model/baseline_lr.py`): One-Hot для `game_phase`, `StandardScaler` строго на Train, исключение коллинеарного `rating_diff`, L2-регуляризация.
+
+Полный пересчёт запускается командой `python scripts/build_dataset.py`. Скрипт формирует `data/processed/final_dataset.csv`, `reports/tables/benchmark.json`, `reports/tables/dataset_row_counts.csv` и обновляет таблицу порогов. Требуется Stockfish 19 в `bin/` или переменная `STOCKFISH_PATH`.
 
 ---
 

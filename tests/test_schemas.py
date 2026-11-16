@@ -40,6 +40,7 @@ def test_position_record_structure():
         color="w",
         eval_before=15.0,
         eval_diff_prev_move=0.0,
+        has_prev_move=0,
         material_balance=0.0,
         piece_count=32,
         pawn_count=16,
@@ -59,6 +60,8 @@ def test_position_record_structure():
     d = rec.to_dict()
     assert d["game_id"] == "g1"
     assert d["position_id"] == "g1_1"
+    assert d["has_prev_move"] == 0
+    assert d["move_number"] == 1
     assert d["is_error"] == 0
     assert d["eval_loss"] == 5.0
 
@@ -80,6 +83,8 @@ def test_features_pov_alignment_and_leakage_detection():
     assert feats_w["player_rating"] == 2000.0
     assert feats_w["opponent_rating"] == 1850.0
     assert feats_w["rating_diff"] == 150.0
+    assert feats_w["has_prev_move"] == 0
+    assert feats_w["move_number"] == 1
 
     # 2. Black turn test: 1. e4
     board_b = chess.Board()
@@ -94,6 +99,8 @@ def test_features_pov_alignment_and_leakage_detection():
     assert feats_b["player_rating"] == 1850.0
     assert feats_b["opponent_rating"] == 2000.0
     assert feats_b["rating_diff"] == -150.0
+    assert feats_b["has_prev_move"] == 1
+    assert feats_b["move_number"] == 1
 
     # 3. Target leakage detection: ensure played_move, result, termination are caught
     leakage_candidates = ["player_rating", "played_move", "game_result", "termination_type"]

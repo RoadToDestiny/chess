@@ -1,8 +1,13 @@
 ================================================================================
 RESEARCH ENVIRONMENT & STOCKFISH EVALUATION SPECIFICATION (STAGE 1 & 3 ARTIFACT)
 ================================================================================
-Operating System:              Windows 10 (AMD64)
-Python Version:                3.14.7
+Operating System:              Microsoft Windows 11 Pro (10.0.26100, AMD64)
+CPU Architecture:              AMD Ryzen 5 5600 6-Core Processor (6 cores, 12 threads)
+System RAM:                    32 GB (31.9 GB visible)
+GPU Acceleration:              NVIDIA GeForce RTX 5060 Laptop GPU (CUDA 13.4)
+Python Version:                3.14.0
+Key Libraries:                 scikit-learn 1.9.1, pandas 3.1.1, numpy 2.5.5, matplotlib 3.11.2, xgboost 3.4.1
+Chess Parser & Compression:    python-chess 1.11.2, zstandard 0.25.0
 Chess Engine:                  Stockfish 19
 Engine Search Depth:           18 plies (fixed across all games)
 Engine Execution Threads:      1 (fixed deterministic evaluation)

@@ -1,0 +1,14 @@
+{
+  "games_read": 500,
+  "moves_read": 35550,
+  "valid_rows": 35130,
+  "excluded_pre_move_mates": 420,
+  "saved_post_move_mate_errors": 85,
+  "excluded_other_terminal": 0,
+  "stockfish_calls": 36050,
+  "stockfish_seconds": 7062.195,
+  "pgn_seconds": 14.852,
+  "feature_seconds": 42.315,
+  "dataset_seconds": 7135.482,
+  "peak_memory_mb": 342.508
+}

@@ -6,7 +6,7 @@ from io import TextIOWrapper
 from pathlib import Path
 import gzip
 import re
-from typing import Iterator, Optional, TextIO, Tuple
+from typing import Dict, Iterator, Optional, TextIO, Tuple
 import chess.pgn
 import zstandard
 
@@ -50,6 +50,49 @@ def parse_time_control(value: str) -> Tuple[int, int]:
     base = int(match.group("base"))
     inc = int(match.group("increment") or 0)
     return base, inc
+
+
+def extract_clock_features(
+    game: chess.pgn.Game,
+    base_seconds: float,
+    increment_seconds: float,
+) -> Dict[int, Dict[str, Optional[float]]]:
+    """Extract pre-move clock values keyed by ply.
+
+    Clock comments describe the clock after the move in the PGN node. A player's
+    previous move is therefore paired with that player's next turn; no future
+    comment is used to construct the current row.
+    """
+    features: Dict[int, Dict[str, Optional[float]]] = {}
+    last_before: Dict[bool, Optional[float]] = {chess.WHITE: None, chess.BLACK: None}
+    last_after: Dict[bool, Optional[float]] = {chess.WHITE: None, chess.BLACK: None}
+
+    board = game.board()
+    for ply, node in enumerate(game.mainline(), start=1):
+        color = board.turn
+        before = last_after[color]
+        if before is None:
+            before = float(base_seconds)
+
+        after = parse_clock_seconds(node.comment or "")
+        time_spent: Optional[float] = None
+        if last_before[color] is not None and last_after[color] is not None:
+            time_spent = max(
+                0.0,
+                last_before[color] - last_after[color] + float(increment_seconds),
+            )
+
+        features[ply] = {
+            "clock_remaining": before,
+            "time_spent_prev_move": time_spent,
+        }
+
+        if after is not None:
+            last_before[color] = before
+            last_after[color] = after
+        board.push(node.move)
+
+    return features
 
 
 def open_pgn_file(path: Path) -> TextIO:
