@@ -49,14 +49,14 @@ def verify_mate_isolation_protocol(
     mate_score_cp: int = 100000,
 ) -> Dict[str, Any]:
     """
-    Verifies that pre-move mates are excluded while post-move opponent mates are
-    retained as explicit mate errors.
+    Verifies that forced checkmate positions are cleanly isolated with is_mate_eval=True
+    and excluded from numerical centipawn loss regressions/thresholds.
     """
+    has_mate = bool(is_mate_before or is_mate_after)
     return {
-        "is_mate_eval": bool(is_mate_before),
-        "is_mate_error": bool(is_mate_after and not is_mate_before),
+        "is_mate_eval": has_mate,
         "mate_score_cp_reference": mate_score_cp,
-        "exclude_from_cp_loss": bool(is_mate_before),
+        "exclude_from_cp_loss": has_mate,
     }
 
 
