@@ -1,0 +1,4 @@
+variant,feature_count,features_included,val_roc_auc,val_pr_auc,val_brier_score,test_roc_auc,test_pr_auc,test_brier_score,test_log_loss
+Variant A (Position Only),11,11 features (Board-State only),0.7887,0.277,0.0761,0.8058,0.3077,0.081,0.2728
+Variant B (Position + Meta),16,16 features (Board + Ratings + Base Time),0.7816,0.2641,0.0766,0.7992,0.2824,0.0826,0.2771
+Variant C (Position + Meta + Clock),18,18 features (Board + Meta + Dynamic Clock),0.782,0.2589,0.0769,0.7991,0.2824,0.0826,0.2772

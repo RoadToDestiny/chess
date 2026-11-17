@@ -1,0 +1,4 @@
+threshold_cp,train_error_rate_pct,test_error_rate_pct,val_roc_auc,val_pr_auc,val_brier_score,test_roc_auc,test_pr_auc,test_brier_score,test_log_loss
+150.0,12.29,13.18,0.7772,0.3209,0.0997,0.7791,0.3121,0.1019,0.3321
+200.0,9.45,10.29,0.782,0.2589,0.0769,0.7991,0.2824,0.0826,0.2772
+300.0,6.11,6.7,0.7959,0.2134,0.0518,0.8155,0.2512,0.0562,0.2031
