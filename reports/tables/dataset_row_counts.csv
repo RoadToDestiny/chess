@@ -1,5 +1,4 @@
-split,games,raw_plies,excluded_pre_move_mates,saved_post_move_mate_errors,valid_rows,ordinary_moves,errors,blunder_rate_pct,scale_pos_weight
-train,350,25253,298,60,24955,22048,2907,11.65,7.58
-val,75,5095,61,12,5034,4450,584,11.60,7.62
-test,75,5202,61,13,5141,4542,599,11.65,7.58
-total,500,35550,420,85,35130,31040,4090,11.64,7.59
+split,games,valid_rows,ordinary_moves,errors,error_rate_pct
+train,350,24224,21936,2288,9.45
+val,75,4927,4469,458,9.3
+test,75,5046,4527,519,10.29

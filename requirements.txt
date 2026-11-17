@@ -1,6 +1,6 @@
 # Unified Pinned Dependencies for Chess Error Prediction Project
 # Core Chess & Data Handling
-python-chess==1.11.2
+chess==1.11.2
 pandas==3.1.1
 numpy==2.5.5
 zstandard==0.25.0

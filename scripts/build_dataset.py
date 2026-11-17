@@ -39,6 +39,7 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
     with open_pgn_file(input_path) as source, StockfishEngine() as engine:
         games = iter(read_games(source))
         game_index = 0
+        print(f"[INFO] Stockfish 19 engine started. Processing games from {input_path.name}...", flush=True)
         while True:
             metrics.start_stage("pgn")
             try:
@@ -105,6 +106,15 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
                 rows.append(features)
                 previous_eval_white = current_eval_white
                 board.push(chess.Move.from_uci(record.uci))
+
+            if game_index % 10 == 0 or game_index == 1 or game_index == 500:
+                elapsed = perf_counter() - dataset_started
+                speed = len(rows) / elapsed if elapsed > 0 else 0.0
+                print(
+                    f"[{game_index}/500 games] Valid positions extracted: {len(rows)} | "
+                    f"Elapsed: {elapsed/60:.1f}m | Speed: {speed:.1f} pos/sec",
+                    flush=True,
+                )
     metrics.dataset_seconds = perf_counter() - dataset_started
     metrics.refresh_peak_memory()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -116,13 +126,17 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
     analyze_threshold_sensitivity_distribution(
         dataset["eval_loss"] if not dataset.empty else pd.Series(dtype=float)
     ).to_csv(reports_dir / "stage5_threshold_distribution.csv", index=False)
+    splits_dir = ROOT_DIR / "data" / "splits"
+    splits_dir.mkdir(parents=True, exist_ok=True)
     split_rows = []
     for split_name in ("train", "val", "test"):
-        split_path = ROOT_DIR / "data" / "splits" / f"{split_name}_game_ids.csv"
+        split_path = splits_dir / f"{split_name}_game_ids.csv"
         if not split_path.exists():
             continue
         split_ids = set(pd.read_csv(split_path)["game_id"].astype(str))
         split_df = dataset[dataset["game_id"].astype(str).isin(split_ids)]
+        # Save split CSV for modeling
+        split_df.to_csv(splits_dir / f"{split_name}.csv", index=False)
         split_rows.append(
             {
                 "split": split_name,

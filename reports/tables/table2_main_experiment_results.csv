@@ -1,0 +1,5 @@
+model,variant,roc_auc,roc_auc_ci_lower,roc_auc_ci_upper,pr_auc,pr_auc_ci_lower,pr_auc_ci_upper,brier_score,brier_ci_lower,brier_ci_upper,log_loss
+LogisticRegression,"Baseline (L2, Scaled)",0.6978,0.668,0.7273,0.1888,0.162,0.2178,0.0885,0.0775,0.0988,0.307
+XGBoost,Raw Probabilities,0.7992,0.7754,0.8199,0.2824,0.2444,0.3208,0.0826,0.0727,0.0918,0.2771
+XGBoost,Platt Calibrated,0.7992,,,0.2824,,,0.0862,,,0.2928
+XGBoost,Isotonic Calibrated,0.7985,,,0.2733,,,0.0825,,,0.2936
