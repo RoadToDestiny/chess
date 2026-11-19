@@ -1,0 +1,2 @@
+game_id,position_id,ply,move_number,color,fen_before,played_move,eval_best_move,eval_after,eval_loss,is_error,eval_before,eval_diff_prev_move,has_prev_move,material_balance,piece_count,pawn_count,legal_checks_count,legal_captures_count,attacked_pieces_count,game_phase,player_rating,opponent_rating,rating_diff,time_control_base,time_control_inc
+mwe_sample_001,mwe_sample_001_1,1,1,w,rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1,e2e4,37.0,28.0,9.0,0,37.0,37.0,0,0.0,14,16,0,0,0,1,2150.0,2100.0,50.0,600.0,0.0

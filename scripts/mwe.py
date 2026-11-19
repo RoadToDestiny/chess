@@ -209,6 +209,12 @@ def run_mwe():
     for col, val in dataset_sample_row.items():
         print(f"   {col:22s} : {val}")
 
+    # Save artifact row to CSV as required by Stage 3 plan
+    out_csv = ROOT_DIR / "reports" / "tables" / "mwe_sample_row.csv"
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame([dataset_sample_row]).to_csv(out_csv, index=False)
+    print(f"\n[Artifacts] Saved MWE sample row to: {out_csv}")
+
     # Step 5 (Backend 3): Verify row in XGBoost pipeline
     b3_report = verify_stage4_backend3(feature_row)
     print("\n[Backend 3 Verification]")
@@ -216,6 +222,9 @@ def run_mwe():
     print(f"   - Features Fed into XGBoost:     {b3_report['num_features']}")
     print(f"   - XGBoost Model Inference:       {b3_report['xgboost_inference_test']}")
     print(f"   - Sample Predicted Blunder Risk: {b3_report['sample_predicted_blunder_prob'] * 100:.1f}%")
+
+    if 'engine' in locals() and engine is not None:
+        engine.close()
 
     print("\n[SUCCESS] Stage 4 Minimal Working Example fully verified by Backend 3.")
 

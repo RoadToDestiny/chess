@@ -1,0 +1,117 @@
+{
+  "model_type": "XGBClassifier",
+  "n_features": 16,
+  "feature_names": [
+    "eval_before",
+    "eval_diff_prev_move",
+    "has_prev_move",
+    "material_balance",
+    "piece_count",
+    "pawn_count",
+    "legal_checks_count",
+    "legal_captures_count",
+    "attacked_pieces_count",
+    "move_number",
+    "game_phase",
+    "player_rating",
+    "opponent_rating",
+    "rating_diff",
+    "time_control_base",
+    "time_control_inc"
+  ],
+  "feature_importances": {
+    "eval_before": 0.07451525330543518,
+    "eval_diff_prev_move": 0.1323697865009308,
+    "has_prev_move": 0.0,
+    "material_balance": 0.0476546511054039,
+    "piece_count": 0.05177663639187813,
+    "pawn_count": 0.054247282445430756,
+    "legal_checks_count": 0.04419231042265892,
+    "legal_captures_count": 0.036584604531526566,
+    "attacked_pieces_count": 0.052452512085437775,
+    "move_number": 0.08610735833644867,
+    "game_phase": 0.24672037363052368,
+    "player_rating": 0.03266708552837372,
+    "opponent_rating": 0.03505120426416397,
+    "rating_diff": 0.030506957322359085,
+    "time_control_base": 0.041364602744579315,
+    "time_control_inc": 0.03378935158252716
+  },
+  "hyperparameters": {
+    "n_estimators": "300",
+    "max_depth": "4",
+    "learning_rate": "0.05",
+    "subsample": "0.8",
+    "colsample_bytree": "0.8",
+    "scale_pos_weight": "1.0",
+    "eval_metric": "logloss",
+    "random_state": "42",
+    "tree_method": "hist",
+    "device": "cuda"
+  },
+  "best_iteration": null,
+  "metrics_val": {
+    "xgboost": {
+      "roc_auc": 0.7816,
+      "pr_auc": 0.2641,
+      "brier_score": 0.0766,
+      "log_loss": 0.2652,
+      "accuracy": 0.906,
+      "precision": 0.4545,
+      "recall": 0.0546,
+      "f1": 0.0975
+    },
+    "logistic_regression": {
+      "roc_auc": 0.6771,
+      "pr_auc": 0.1635,
+      "brier_score": 0.0817,
+      "log_loss": 0.2913,
+      "accuracy": 0.9072,
+      "precision": 0.6667,
+      "recall": 0.0044,
+      "f1": 0.0087
+    }
+  },
+  "metrics_test": {
+    "xgboost": {
+      "roc_auc": 0.7992,
+      "pr_auc": 0.2824,
+      "brier_score": 0.0826,
+      "log_loss": 0.2771,
+      "accuracy": 0.896,
+      "precision": 0.4118,
+      "recall": 0.027,
+      "f1": 0.0506
+    },
+    "logistic_regression": {
+      "roc_auc": 0.6978,
+      "pr_auc": 0.1888,
+      "brier_score": 0.0885,
+      "log_loss": 0.307,
+      "accuracy": 0.8967,
+      "precision": 0.4,
+      "recall": 0.0077,
+      "f1": 0.0151
+    },
+    "xgboost_platt": {
+      "roc_auc": 0.7992,
+      "pr_auc": 0.2824,
+      "brier_score": 0.0862,
+      "log_loss": 0.2928,
+      "accuracy": 0.8904,
+      "precision": 0.3712,
+      "recall": 0.0944,
+      "f1": 0.1505
+    },
+    "xgboost_isotonic": {
+      "roc_auc": 0.7985,
+      "pr_auc": 0.2733,
+      "brier_score": 0.0825,
+      "log_loss": 0.2936,
+      "accuracy": 0.8971,
+      "precision": 0.5,
+      "recall": 0.0212,
+      "f1": 0.0407
+    }
+  }
+}

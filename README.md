@@ -106,18 +106,41 @@ Chess/
 - Реализована калибровка вероятностей (`calibration.py`): групповые OOF-прогнозы по партиям (`GroupKFold`), обучение калибраторов Платта и Isotonic, оценка на изолированном Test. Основной режим — `scale_pos_weight = 1.0`.
 
 ### Этап 5. Вычислительные затраты и баланс классов
-- Сформирован полный отчет о вычислительных затратах (`reports/tables/benchmark.json`): 36 050 вызовов Stockfish, 7 062 с время движка (195.9 мс/вызов), 7 135 с общее время сборки, 342.5 МБ пик RAM.
-- Рассчитано распределение классов при основном операционном пороге 200 cp: 31 040 обычных ходов (88.36%), 4 090 ошибок (11.64%), референсный `scale_pos_weight = 7.58` (рассчитан строго на Train).
+- Сформирован полный отчет о вычислительных затратах (`reports/tables/benchmark.json`): 36 050 вызовов Stockfish, 9 474.13 с время работы движка (262.8 мс/вызов), 9 538.40 с общее время сборки, 72.07 МБ пик RAM.
+- Рассчитано распределение классов при основном операционном пороге 200 cp: 30 932 обычных хода (90.45%), 3 265 ошибок (9.55%), референсный `scale_pos_weight = 9.47` (рассчитан строго на Train: $21\,936 / 2\,288 \approx 9.59$).
 - Сформирована таблица чувствительности порогов (150, 200, 300 cp) в `reports/tables/stage5_threshold_distribution.csv`.
 
 ### Этап 6. Подготовка выборок, аудит утечек и baseline LogisticRegression
-- Проведено разделение по независимым партиям (`game_id`) в пропорции 70% / 15% / 15% с строгим разделением сырых полуходов и валидных строк (`reports/tables/dataset_row_counts.csv`):
-  - Train: 350 партий, 25 253 полухода $\to$ **24 955 валидных строк** (`data/splits/train_game_ids.csv`).
-  - Validation: 75 партий, 5 095 полуходов $\to$ **5 034 валидные строки** (`data/splits/val_game_ids.csv`).
-  - Test: 75 партий, 5 202 полухода $\to$ **5 141 валидная строка** (`data/splits/test_game_ids.csv`).
+- Проведено разделение по независимым партиям (`game_id`) в пропорции 70% / 15% / 15% со строгим разделением сырых полуходов и валидных строк (`reports/tables/dataset_row_counts.csv`):
+  - Train: 350 партий, 25 253 полухода $\to$ **24 224 валидные строки** (`data/splits/train_game_ids.csv`).
+  - Validation: 75 партий, 5 095 полуходов $\to$ **4 927 валидных строк** (`data/splits/val_game_ids.csv`).
+  - Test: 75 партий, 5 202 полухода $\to$ **5 046 валидных строк** (`data/splits/test_game_ids.csv`).
 - Доказано отсутствие пересечения множеств партий между сплитами ($\text{Train} \cap \text{Val} = \emptyset$, $\text{Train} \cap \text{Test} = \emptyset$, $\text{Val} \cap \text{Test} = \emptyset$).
 - Пройден аудит признаков на утечки (`reports/tables/stage6_feature_audit.json`).
 - Реализован модуль baseline-модели `LogisticRegression` (`model/baseline_lr.py`): One-Hot для `game_phase`, `StandardScaler` строго на Train, исключение коллинеарного `rating_diff`, L2-регуляризация.
+
+### Этап 7. Обучение моделей XGBoost и LogisticRegression
+- Обучение моделей на подготовленных выборках (`scripts/train_models.py`):
+  - XGBoost на GPU (`cuda:0`, `hist`) с ранней остановкой `early_stopping_rounds=30`;
+  - LogisticRegression с предварительной стандартизацией и защитой от мультиколлинеарности;
+  - Сохранение артефактов: `artifacts/models/model.json`, `model_metadata.json`, `artifacts/runs/main_run.json`.
+
+### Этап 8. Основной эксперимент и оценка качества
+- Скрипт `scripts/run_stage9_main_experiment.py` проводит оценку на изолированном Test (75 партий, 5 046 позиций):
+  - XGBoost показал **ROC-AUC = 0.7992**, **PR-AUC = 0.2824**, **Brier = 0.0826**;
+  - LogisticRegression показала **ROC-AUC = 0.6978**, **PR-AUC = 0.1888**;
+  - Доказана статистическая значимость превосходства ($p < 0.001$) через кластерный бутстреп ($B=1000$ итераций по целым партиям);
+  - Сгенерированы таблицы (`reports/tables/table2_main_experiment_results.csv`) и графики (`reports/figures/figure1_calibration_diagram.png`, `figure2_roc_pr_curves.png`, `figure3_feature_importance.png`).
+
+### Этап 9. Дополнительные эксперименты (Абляция и пороги)
+- Скрипт `scripts/run_stage10_experiments.py`:
+  - Трёхступенчатая абляция (Таблица 3): Вариант А (только доска, 11 признаков, **ROC-AUC = 0.8058**), Вариант Б (позиция + мета, 16 признаков, 0.7992), Вариант В (позиция + мета + часы, 18 признаков, 0.7991);
+  - Чувствительность к порогам (Таблица 4): 150 cp (0.7791), 200 cp (0.7991), 300 cp (**0.8155**).
+
+### Этапы 10–11. Оформление статьи и академическая документация
+- Сформирована Таблица 1 описательной статистики (`reports/tables/table1_dataset_characteristics.csv`);
+- Подготовлен полный черновик научной статьи по стандарту IMRAD (`docs/draft_for_editors.md`);
+- Актуализировано единое научно-методологическое руководство (`docs/journal_methodology_guide.md`).
 
 Полный пересчёт запускается командой `python scripts/build_dataset.py`. Скрипт формирует `data/processed/final_dataset.csv`, `reports/tables/benchmark.json`, `reports/tables/dataset_row_counts.csv` и обновляет таблицу порогов. Требуется Stockfish 19 в `bin/` или переменная `STOCKFISH_PATH`.
 

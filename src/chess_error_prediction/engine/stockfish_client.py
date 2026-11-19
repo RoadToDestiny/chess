@@ -3,17 +3,6 @@ Stockfish UCI engine client and lifecycle management.
 """
 
 from dataclasses import dataclass
-import os
-from typing import Any, Dict, Optional
-import chess
-import chess.engine
-
-
-class StockfishError(RuntimeError):
-    """Raised when Stockfish cannot be started or queried."""
-
-
-from dataclasses import dataclass
 from pathlib import Path
 import os
 from typing import Any, Dict, Optional
@@ -161,12 +150,30 @@ class StockfishEngine:
 
         score = info["score"].pov(chess.WHITE)
         score_cp = score.score(mate_score=self.config.mate_score_cp)
+        # Apply technical clipping [-2500, +2500] cp to non-mate static evaluations
+        if score_cp is not None and not score.is_mate():
+            score_cp = max(-2500.0, min(2500.0, float(score_cp)))
+
         return {
             "score_cp": float(score_cp) if score_cp is not None else None,
             "is_mate": score.is_mate(),
             "mate_in": score.mate(),
             "depth": info.get("depth", self.config.depth),
         }
+
+    def reset_game(self) -> None:
+        """
+        Sends ucinewgame and isready to Stockfish via UCI protocol.
+        Clears transposition table between independent games.
+        """
+        if self._engine is not None and hasattr(self._engine, "protocol"):
+            try:
+                # python-chess protocol command to signal new game and clear hash
+                if hasattr(self._engine.protocol, "send_line"):
+                    self._engine.protocol.send_line("ucinewgame")
+                    self._engine.protocol.send_line("isready")
+            except Exception:
+                pass
 
     def verify(self) -> Dict[str, str]:
         """Verifies startup by analyzing initial position."""

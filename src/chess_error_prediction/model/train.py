@@ -51,6 +51,7 @@ def get_default_xgb_params(device: str = "cuda") -> Dict[str, Any]:
         "colsample_bytree": 0.8,
         "scale_pos_weight": 1.0,
         "eval_metric": "logloss",
+        "early_stopping_rounds": 30,
         "random_state": 42,
     }
     if device == "cuda":
