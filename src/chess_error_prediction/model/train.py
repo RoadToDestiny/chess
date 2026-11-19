@@ -42,19 +42,23 @@ class TrainingResult:
 
 
 def get_default_xgb_params(device: str = "cuda") -> Dict[str, Any]:
-    """Returns research default hyperparameters for XGBoost."""
+    """Returns research default hyperparameters for XGBoost, loading from config/config.yaml."""
+    from chess_error_prediction.config_loader import get_model_config
+
+    yaml_cfg = get_model_config()
     params = {
-        "n_estimators": 300,
-        "max_depth": 4,
-        "learning_rate": 0.05,
-        "subsample": 0.8,
-        "colsample_bytree": 0.8,
-        "scale_pos_weight": 1.0,
-        "eval_metric": "logloss",
-        "early_stopping_rounds": 30,
-        "random_state": 42,
+        "n_estimators": int(yaml_cfg.get("n_estimators", 300)),
+        "max_depth": int(yaml_cfg.get("max_depth", 4)),
+        "learning_rate": float(yaml_cfg.get("learning_rate", 0.05)),
+        "subsample": float(yaml_cfg.get("subsample", 0.8)),
+        "colsample_bytree": float(yaml_cfg.get("colsample_bytree", 0.8)),
+        "scale_pos_weight": float(yaml_cfg.get("scale_pos_weight", 1.0)),
+        "eval_metric": str(yaml_cfg.get("eval_metric", "logloss")),
+        "early_stopping_rounds": int(yaml_cfg.get("early_stopping_rounds", 30)),
+        "random_state": int(yaml_cfg.get("random_state", 42)),
     }
-    if device == "cuda":
+    dev = device or yaml_cfg.get("device", "cuda")
+    if dev == "cuda":
         params["tree_method"] = "hist"
         params["device"] = "cuda"
     else:
@@ -134,6 +138,7 @@ def train_models(
             c_params = dict(params)
             # Reduce n_estimators for quick OOF fitting
             c_params["n_estimators"] = min(c_params.get("n_estimators", 100), 100)
+            c_params.pop("early_stopping_rounds", None)
             return xgb.XGBClassifier(**c_params)
 
         try:
@@ -172,6 +177,8 @@ def train_models(
             metrics_test["xgboost_isotonic"] = compute_classification_metrics(y_test, iso_test_prob)
 
     best_iter = getattr(xgb_model, "best_iteration", None)
+    if best_iter is not None:
+        best_iter = int(best_iter)
 
     return TrainingResult(
         xgb_model=xgb_model,

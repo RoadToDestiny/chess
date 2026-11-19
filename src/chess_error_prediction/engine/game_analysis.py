@@ -49,8 +49,10 @@ def analyze_game(
     Mate evaluations are retained in the record but excluded from centipawn-loss labeling.
     """
     board = game.board()
+    engine.reset_game()
+    game_token = id(game)
     started = perf_counter()
-    current_eval = normalize_evaluation(engine.analyze(board))
+    current_eval = normalize_evaluation(engine.analyze(board, game=game_token))
     if benchmark is not None:
         benchmark.record_stockfish_call(perf_counter() - started)
     try:
@@ -72,7 +74,7 @@ def analyze_game(
         board.push(move)
         fen_after = board.fen()
         started = perf_counter()
-        evaluation_after = normalize_evaluation(engine.analyze(board))
+        evaluation_after = normalize_evaluation(engine.analyze(board, game=game_token))
         if benchmark is not None:
             benchmark.record_stockfish_call(perf_counter() - started)
         current_eval = evaluation_after

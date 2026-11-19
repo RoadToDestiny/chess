@@ -41,6 +41,12 @@ def main():
             raise ValueError(f"Missing columns in {name}: {missing}")
 
     # 2. Train models
+    from chess_error_prediction.model.train import get_default_xgb_params
+    cfg_params = get_default_xgb_params(device="cuda")
+    print(f"\n[Config] Active hyperparameters loaded from config/config.yaml:")
+    for k, v in cfg_params.items():
+        print(f"   - {k}: {v}")
+
     print("\n[Training] Training XGBoost and LogisticRegression...")
     res = train_models(
         train_df=train_df,
@@ -49,6 +55,7 @@ def main():
         feature_cols=ALL_FEATURES,
         target_col="is_error",
         group_col="game_id",
+        xgb_params=cfg_params,
         enable_calibration=True,
         device="cuda",
     )

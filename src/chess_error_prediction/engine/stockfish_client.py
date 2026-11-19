@@ -82,6 +82,32 @@ class StockfishConfig:
         )
         return cls(executable=executable, **overrides)
 
+    @classmethod
+    def from_config(cls, **overrides: Any) -> "StockfishConfig":
+        """Build configuration from config/config.yaml under 'stockfish' section with overrides."""
+        try:
+            from chess_error_prediction.config_loader import get_stockfish_config
+            sf_cfg = get_stockfish_config()
+        except Exception:
+            sf_cfg = {}
+        executable = overrides.pop("executable", sf_cfg.get("executable") or find_default_executable())
+        depth = overrides.pop("depth", int(sf_cfg.get("depth", 18)))
+        timeout = overrides.pop("timeout", float(sf_cfg.get("timeout", 30.0)))
+        threads = overrides.pop("threads", int(sf_cfg.get("threads", 1)))
+        hash_mb = overrides.pop("hash_mb", int(sf_cfg.get("hash_mb", 128)))
+        mate_score_cp = overrides.pop("mate_score_cp", int(sf_cfg.get("mate_score_cp", 100000)))
+        expected_version = overrides.pop("expected_version", sf_cfg.get("version", "Stockfish 19"))
+        return cls(
+            executable=executable,
+            depth=depth,
+            timeout=timeout,
+            threads=threads,
+            hash_mb=hash_mb,
+            mate_score_cp=mate_score_cp,
+            expected_version=expected_version,
+            **overrides,
+        )
+
 
 class StockfishEngine:
     """UCI wrapper providing a consistent White-POV evaluation interface."""
@@ -134,9 +160,10 @@ class StockfishEngine:
             raise StockfishError("Stockfish is not started.")
         return dict(self._engine.id)
 
-    def analyze(self, board: chess.Board) -> Dict[str, Any]:
+    def analyze(self, board: chess.Board, game: Any = None) -> Dict[str, Any]:
         """
         Analyzes board position and returns centipawn score strictly from White's POV.
+        Optionally accepts game token to inform UCI protocol of game boundaries.
         """
         if self._engine is None:
             raise StockfishError("Stockfish is not started.")
@@ -144,6 +171,7 @@ class StockfishEngine:
             info = self._engine.analyse(
                 board,
                 chess.engine.Limit(depth=self.config.depth),
+                game=game,
             )
         except (chess.engine.EngineError, chess.engine.EngineTerminatedError) as exc:
             raise StockfishError("Stockfish failed while analyzing position.") from exc
@@ -163,15 +191,15 @@ class StockfishEngine:
 
     def reset_game(self) -> None:
         """
-        Sends ucinewgame and isready to Stockfish via UCI protocol.
+        Sends ucinewgame to Stockfish via UCI protocol and safely synchronizes with ping (isready/readyok).
         Clears transposition table between independent games.
         """
-        if self._engine is not None and hasattr(self._engine, "protocol"):
+        if self._engine is not None:
             try:
-                # python-chess protocol command to signal new game and clear hash
-                if hasattr(self._engine.protocol, "send_line"):
+                self._engine.ping()
+                if hasattr(self._engine, "protocol") and hasattr(self._engine.protocol, "send_line"):
                     self._engine.protocol.send_line("ucinewgame")
-                    self._engine.protocol.send_line("isready")
+                self._engine.ping()
             except Exception:
                 pass
 

@@ -164,6 +164,70 @@ def run_experiment_2_thresholds(
     return results
 
 
+def run_color_feature_experiment(
+    train_df: pd.DataFrame,
+    val_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    feature_spec: FeatureSpec,
+    xgb_params: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """
+    Evaluates whether including an explicit binary player color feature ('color_binary')
+    adds predictive power over Point-of-View (POV) aligned board features.
+    """
+    print("\n" + "=" * 80)
+    print("ADDITIONAL EXPERIMENT: PLAYER COLOR FEATURE ABLATION (POV INVARIANCE)")
+    print("=" * 80)
+
+    tr_df = train_df.copy()
+    v_df = val_df.copy()
+    te_df = test_df.copy()
+    for d in [tr_df, v_df, te_df]:
+        d["color_binary"] = (d["color"] == "w").astype(np.float32)
+
+    base_cols = list(feature_spec.variant_b_features)
+    color_cols = base_cols + ["color_binary"]
+
+    configs = [
+        ("Variant B (POV-aligned, 16 feat)", base_cols, "POV features without explicit color"),
+        ("Variant B + Player Color (17 feat)", color_cols, "POV features with explicit color_binary"),
+    ]
+
+    results = []
+    y_train = tr_df["is_error"].astype(int).values
+    y_val = v_df["is_error"].astype(int).values
+    y_test = te_df["is_error"].astype(int).values
+
+    for name, f_cols, desc in configs:
+        model = xgb.XGBClassifier(**xgb_params)
+        model.fit(
+            tr_df[f_cols].astype(np.float32),
+            y_train,
+            eval_set=[(v_df[f_cols].astype(np.float32), y_val)],
+            verbose=False,
+        )
+        prob_val = model.predict_proba(v_df[f_cols].astype(np.float32))[:, 1]
+        prob_test = model.predict_proba(te_df[f_cols].astype(np.float32))[:, 1]
+        m_val = compute_classification_metrics(y_val, prob_val)
+        m_test = compute_classification_metrics(y_test, prob_test)
+
+        results.append({
+            "model_variant": name,
+            "feature_count": len(f_cols),
+            "description": desc,
+            "val_roc_auc": m_val["roc_auc"],
+            "val_pr_auc": m_val["pr_auc"],
+            "test_roc_auc": m_test["roc_auc"],
+            "test_pr_auc": m_test["pr_auc"],
+            "test_brier_score": m_test["brier_score"],
+            "test_log_loss": m_test["log_loss"],
+        })
+
+    delta_auc = abs(results[0]["test_roc_auc"] - results[1]["test_roc_auc"])
+    print(f"\n[Color Feature Result] Base ROC-AUC: {results[0]['test_roc_auc']:.4f}, With Color: {results[1]['test_roc_auc']:.4f}, Delta: {delta_auc:.4f}")
+    return results
+
+
 def main():
     splits_dir = ROOT_DIR / "data" / "splits"
     train_df = pd.read_csv(splits_dir / "train.csv")
@@ -196,6 +260,15 @@ def main():
         xgb_params=xgb_params,
     )
 
+    # 3. Run Additional Experiment: Player Color Feature Analysis
+    exp3_results = run_color_feature_experiment(
+        train_df=train_df,
+        val_df=val_df,
+        test_df=test_df,
+        feature_spec=f_spec,
+        xgb_params=xgb_params,
+    )
+
     tables_dir = ROOT_DIR / "reports" / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
 
@@ -214,6 +287,14 @@ def main():
     print(f"\n[Saved] Table 4 (Threshold Sensitivity) -> {table4_path}")
     print("\nTABLE 4: THRESHOLD SENSITIVITY COMPARISON (TEST SET):")
     print(df_exp2[["threshold_cp", "test_error_rate_pct", "test_roc_auc", "test_pr_auc", "test_brier_score"]].to_string(index=False))
+
+    # Save Color Ablation Results
+    df_exp3 = pd.DataFrame(exp3_results)
+    color_path = tables_dir / "color_ablation_results.csv"
+    df_exp3.to_csv(color_path, index=False)
+    print(f"\n[Saved] Color Feature Ablation -> {color_path}")
+    print("\nCOLOR ABLATION COMPARISON (TEST SET):")
+    print(df_exp3[["model_variant", "feature_count", "test_roc_auc", "test_pr_auc", "test_brier_score"]].to_string(index=False))
 
     print("\n[SUCCESS] Stage 10 Experiments successfully completed.")
 

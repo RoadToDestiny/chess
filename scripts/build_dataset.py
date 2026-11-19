@@ -56,6 +56,7 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
             clocks = extract_clock_features(game, base_seconds, increment_seconds)
             board = game.board()
             previous_eval_white = None
+            engine.reset_game()
 
             for record in analyze_game(game, engine, benchmark=metrics):
                 current_eval_white = record.evaluation_before.score_cp

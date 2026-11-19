@@ -91,7 +91,11 @@ def extract_features_row_backend2(board: chess.Board, metadata: dict, eval_befor
     o_elo = b_elo if is_white else w_elo
 
     eval_before_player = eval_before_white if is_white else -eval_before_white
-    eval_diff_prev = (eval_before_white - prev_eval_white) if is_white else (prev_eval_white - eval_before_white)
+    # At game start (ply=0 before move 1), previous move does not exist: eval_diff_prev = 0.0
+    if board.ply() == 0 or prev_eval_white is None:
+        eval_diff_prev = 0.0
+    else:
+        eval_diff_prev = (eval_before_white - prev_eval_white) if is_white else (prev_eval_white - eval_before_white)
 
     return {
         "eval_before": float(eval_before_player),
@@ -178,7 +182,7 @@ def run_mwe():
 
     # Step 3 (Backend 2): Build feature row before move
     metadata = dict(game.headers)
-    feature_row = extract_features_row_backend2(board, metadata, score_before_white, prev_eval_white=0.0)
+    feature_row = extract_features_row_backend2(board, metadata, score_before_white, prev_eval_white=None)
     print(f"[Backend 2] Feature row extracted from position ({len(feature_row)} pre-move features):")
     for k, v in feature_row.items():
         print(f"   - {k}: {v}")
