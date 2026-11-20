@@ -1,0 +1,3 @@
+model_variant,feature_count,description,val_roc_auc,val_pr_auc,test_roc_auc,test_pr_auc,test_brier_score,test_log_loss
+"Variant B (POV-aligned, 16 feat)",16,POV features without explicit color,0.7874,0.2738,0.799,0.288,0.0823,0.2777
+Variant B + Player Color (17 feat),17,POV features with explicit color_binary,0.7856,0.2692,0.7984,0.2878,0.0823,0.2778

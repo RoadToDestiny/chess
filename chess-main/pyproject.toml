@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chess-error-prediction"
+version = "0.1.0"
+description = "Predicting the probability of human chess blunders using gradient boosted decision trees"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Chess ML Research Team" }
+]
+dependencies = [
+    "python-chess>=1.10.0",
+    "pandas>=2.2.0",
+    "numpy>=2.0.0",
+    "xgboost>=3.0.0",
+    "scikit-learn>=1.5.0",
+    "matplotlib>=3.9.0",
+    "requests>=2.31.0",
+    "zstandard>=0.22.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]

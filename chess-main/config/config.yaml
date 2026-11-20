@@ -1,0 +1,73 @@
+# Единая конфигурация параметров исследования
+# Прогнозирование вероятности шахматных ошибок на основе XGBoost
+
+stockfish:
+  executable: "bin/stockfish-windows-x86-64-universal.exe"
+  version: "Stockfish 19"
+  depth: 18
+  timeout: 30.0
+  threads: 1
+  hash_mb: 128
+  mate_score_cp: 100000
+
+filter:
+  min_elo: 1600
+  max_elo: 2800
+  max_elo_diff: 300
+  min_base_seconds: 600
+  allowed_time_controls: null
+  min_full_moves: 10
+  max_full_moves: 120
+  exclude_bots: true
+  require_standard_variant: true
+
+labeling:
+  default_threshold_cp: 200.0
+  sensitivity_thresholds:
+    - 150.0
+    - 200.0
+    - 300.0
+  exclude_mates: true
+
+dataset:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  split_column: "game_id"
+  random_seed: 42
+
+features:
+  position_features:
+    - "eval_before"
+    - "eval_diff_prev_move"
+    - "has_prev_move"
+    - "material_balance"
+    - "piece_count"
+    - "pawn_count"
+    - "legal_checks_count"
+    - "legal_captures_count"
+    - "attacked_pieces_count"
+    - "move_number"
+    - "game_phase"
+  meta_features:
+    - "player_rating"
+    - "opponent_rating"
+    - "rating_diff"
+    - "time_control_base"
+    - "time_control_inc"
+  dynamic_clock_features:
+    - "clock_remaining"
+    - "time_spent_prev_move"
+
+model:
+  tree_method: "hist"
+  device: "cuda"
+  scale_pos_weight: 1.0
+  n_estimators: 300
+  max_depth: 4
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  eval_metric: "logloss"
+  early_stopping_rounds: 30
+  random_state: 42
