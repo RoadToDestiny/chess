@@ -116,7 +116,10 @@ def label_position_evaluations(
         is_error = 0
         is_mate_eval = False
     else:
-        loss = compute_centipawn_loss(float(score_before), float(score_after), color)
+        # Both static evaluations are clipped to [-2500, +2500] cp by
+        # StockfishEngine. Keep the derived target on the same bounded scale.
+        raw_loss = compute_centipawn_loss(float(score_before), float(score_after), color)
+        loss = float(max(-max_clamped_loss, min(max_clamped_loss, raw_loss)))
         is_error = assign_blunder_label(loss, threshold_cp=threshold_cp)
         is_mate_eval = False
 

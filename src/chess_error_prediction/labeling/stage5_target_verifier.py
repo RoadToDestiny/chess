@@ -3,7 +3,7 @@ Stage 5 Verification Module (Backend 3).
 Verifies binary target variable correctness and calculates class imbalance distributions.
 """
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 

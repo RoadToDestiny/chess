@@ -20,22 +20,22 @@
     "time_control_inc"
   ],
   "feature_importances": {
-    "eval_before": 0.08067581802606583,
-    "eval_diff_prev_move": 0.1773921251296997,
+    "eval_before": 0.07868699729442596,
+    "eval_diff_prev_move": 0.1791338473558426,
     "has_prev_move": 0.0,
-    "material_balance": 0.04603755474090576,
-    "piece_count": 0.04932939633727074,
-    "pawn_count": 0.05677618458867073,
-    "legal_checks_count": 0.0462665818631649,
-    "legal_captures_count": 0.03347112238407135,
-    "attacked_pieces_count": 0.048611972481012344,
-    "move_number": 0.1085219532251358,
-    "game_phase": 0.19103749096393585,
-    "player_rating": 0.03336002305150032,
-    "opponent_rating": 0.028764888644218445,
-    "rating_diff": 0.0300435870885849,
-    "time_control_base": 0.03580259904265404,
-    "time_control_inc": 0.0339086689054966
+    "material_balance": 0.04847985878586769,
+    "piece_count": 0.04851587489247322,
+    "pawn_count": 0.05860069766640663,
+    "legal_checks_count": 0.045115940272808075,
+    "legal_captures_count": 0.039125025272369385,
+    "attacked_pieces_count": 0.05206719785928726,
+    "move_number": 0.1131221354007721,
+    "game_phase": 0.17203214764595032,
+    "player_rating": 0.033927179872989655,
+    "opponent_rating": 0.030593160539865494,
+    "rating_diff": 0.03170423209667206,
+    "time_control_base": 0.030840551480650902,
+    "time_control_inc": 0.03805513679981232
   },
   "hyperparameters": {
     "n_estimators": "300",
@@ -48,71 +48,71 @@
     "early_stopping_rounds": "30",
     "random_state": "42",
     "tree_method": "hist",
-    "device": "cuda"
+    "device": "cpu"
   },
-  "best_iteration": 122,
+  "best_iteration": 149,
   "metrics_val": {
     "xgboost": {
-      "roc_auc": 0.7874,
-      "pr_auc": 0.2738,
-      "brier_score": 0.0756,
-      "log_loss": 0.2622,
-      "accuracy": 0.907,
-      "precision": 0.5,
-      "recall": 0.0328,
-      "f1": 0.0615
+      "roc_auc": 0.7817,
+      "pr_auc": 0.2682,
+      "brier_score": 0.0751,
+      "log_loss": 0.2614,
+      "accuracy": 0.9089,
+      "precision": 0.5417,
+      "recall": 0.0288,
+      "f1": 0.0547
     },
     "logistic_regression": {
-      "roc_auc": 0.6775,
-      "pr_auc": 0.1618,
-      "brier_score": 0.0817,
-      "log_loss": 0.2911,
-      "accuracy": 0.907,
-      "precision": 0.5,
+      "roc_auc": 0.7118,
+      "pr_auc": 0.1911,
+      "brier_score": 0.08,
+      "log_loss": 0.283,
+      "accuracy": 0.9056,
+      "precision": 0.0625,
       "recall": 0.0022,
       "f1": 0.0043
     }
   },
   "metrics_test": {
     "xgboost": {
-      "roc_auc": 0.799,
-      "pr_auc": 0.288,
-      "brier_score": 0.0823,
-      "log_loss": 0.2777,
-      "accuracy": 0.8975,
-      "precision": 0.5625,
-      "recall": 0.0173,
-      "f1": 0.0336
+      "roc_auc": 0.7981,
+      "pr_auc": 0.2799,
+      "brier_score": 0.0818,
+      "log_loss": 0.2759,
+      "accuracy": 0.8971,
+      "precision": 0.3913,
+      "recall": 0.0175,
+      "f1": 0.0335
     },
     "logistic_regression": {
-      "roc_auc": 0.6987,
-      "pr_auc": 0.1867,
-      "brier_score": 0.0885,
-      "log_loss": 0.3069,
-      "accuracy": 0.8966,
-      "precision": 0.3333,
-      "recall": 0.0058,
-      "f1": 0.0114
+      "roc_auc": 0.7355,
+      "pr_auc": 0.2174,
+      "brier_score": 0.0868,
+      "log_loss": 0.2988,
+      "accuracy": 0.8952,
+      "precision": 0.2222,
+      "recall": 0.0117,
+      "f1": 0.0222
     },
     "xgboost_platt": {
-      "roc_auc": 0.799,
-      "pr_auc": 0.288,
-      "brier_score": 0.0848,
-      "log_loss": 0.2906,
-      "accuracy": 0.894,
-      "precision": 0.4,
-      "recall": 0.0617,
-      "f1": 0.1068
+      "roc_auc": 0.7981,
+      "pr_auc": 0.2799,
+      "brier_score": 0.0846,
+      "log_loss": 0.2896,
+      "accuracy": 0.8938,
+      "precision": 0.3962,
+      "recall": 0.0817,
+      "f1": 0.1355
     },
     "xgboost_isotonic": {
-      "roc_auc": 0.7988,
-      "pr_auc": 0.279,
-      "brier_score": 0.0819,
-      "log_loss": 0.2864,
-      "accuracy": 0.8973,
-      "precision": 0.5263,
-      "recall": 0.0193,
-      "f1": 0.0372
+      "roc_auc": 0.797,
+      "pr_auc": 0.2706,
+      "brier_score": 0.0817,
+      "log_loss": 0.2861,
+      "accuracy": 0.8977,
+      "precision": 0.3333,
+      "recall": 0.0039,
+      "f1": 0.0077
     }
   }
 }

@@ -1,4 +1,4 @@
 split,games,valid_rows,ordinary_moves,errors,error_rate_pct
-train,350,24224,21936,2288,9.45
-val,75,4927,4469,458,9.3
-test,75,5046,4527,519,10.29
+train,350,24224,21941,2283,9.42
+val,75,4927,4476,451,9.15
+test,75,5046,4532,514,10.19

@@ -27,6 +27,7 @@ from chess_error_prediction.schemas import ALL_FEATURES
 from chess_error_prediction.model import (
     train_models,
     compute_classification_metrics,
+    save_training_artifacts,
 )
 
 
@@ -115,8 +116,20 @@ def run_stage9_main_experiment():
         target_col="is_error",
         group_col="game_id",
         enable_calibration=True,
-        device="cuda",
+        device="cpu",
     )
+
+    # Persist the exact model and metrics produced by this Stage 9 run.
+    models_dir = ROOT_DIR / "artifacts" / "models"
+    runs_dir = ROOT_DIR / "artifacts" / "runs"
+    model_path, metadata_path, run_path = save_training_artifacts(
+        result=res,
+        models_dir=models_dir,
+        runs_dir=runs_dir,
+    )
+    print(f"[Artifacts] Model saved to: {model_path}")
+    print(f"[Artifacts] Model metadata saved to: {metadata_path}")
+    print(f"[Artifacts] Run metadata saved to: {run_path}")
 
     X_test = test_df[ALL_FEATURES].astype(np.float32)
     y_test = test_df["is_error"].values

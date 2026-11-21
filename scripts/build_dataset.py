@@ -56,8 +56,6 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
             clocks = extract_clock_features(game, base_seconds, increment_seconds)
             board = game.board()
             previous_eval_white = None
-            engine.reset_game()
-
             for record in analyze_game(game, engine, benchmark=metrics):
                 current_eval_white = record.evaluation_before.score_cp
                 if record.eval_loss is None:
@@ -71,6 +69,9 @@ def build_dataset(input_path: Path, output_path: Path, benchmark_path: Path) -> 
                     eval_diff = current_eval_white - previous_eval_white
                 else:
                     eval_diff = previous_eval_white - current_eval_white
+                # Each static evaluation is already clipped to [-2500, +2500],
+                # so this difference must remain within [-5000, +5000].
+                eval_diff = float(max(-5000.0, min(5000.0, eval_diff)))
 
                 metrics.start_stage("features")
                 features = extract_all_features(
