@@ -3,7 +3,7 @@ STAGE 9 RERUN LOG — AFTER DERIVED-FEATURE CLEANUP
 Command: python scripts/run_stage9_main_experiment.py
 Device: CPU
 Dataset: 34,197 rows; Train 24,224; Val 4,927; Test 5,046
-Best iteration: 161 (see artifacts/models/model_metadata.json)
+Best iteration: 149 (see artifacts/models/model_metadata.json)
 
 Test metrics (75 unseen games):
   LogisticRegression: ROC-AUC=0.7355 (95% CI 0.7072–0.7602), PR-AUC=0.2174 (0.1891–0.2466), Brier=0.0868 (0.0760–0.0974), LogLoss=0.2988

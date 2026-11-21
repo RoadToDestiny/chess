@@ -126,7 +126,7 @@ Chess/
   - Сохранение артефактов: `artifacts/models/model.json`, `model_metadata.json`, `artifacts/runs/main_run.json`.
 
 ### Этап 8. Основной эксперимент и оценка качества
-- Stage 9 повторно запущен после включения early stopping. Текущий запуск: `best_iteration = 161`, устройство `cpu`.
+- Stage 9 повторно запущен после включения early stopping. Текущий запуск: `best_iteration = 149`, устройство `cpu`.
 - Скрипт `scripts/run_stage9_main_experiment.py` проводит оценку на изолированном Test (75 партий, 5 046 позиций):
   - XGBoost показал **ROC-AUC = 0.7981**, **PR-AUC = 0.2799**, **Brier = 0.0818**;
   - LogisticRegression показала **ROC-AUC = 0.7355**, **PR-AUC = 0.2174**;
