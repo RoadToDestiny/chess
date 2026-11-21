@@ -60,13 +60,19 @@ def run_experiment_1_ablation(
         X_val = val_df[f_cols].astype(np.float32)
         X_test = test_df[f_cols].astype(np.float32)
 
-        model = xgb.XGBClassifier(**xgb_params)
-        model.fit(
-            X_train,
-            y_train,
-            eval_set=[(X_val, y_val)],
-            verbose=False,
-        )
+        model_path = ROOT_DIR / "artifacts" / "models" / "model.json"
+        if name == "Variant B (Position + Meta)" and model_path.exists():
+            print(f"   [Loading Canonical Model] Using saved artifact: {model_path}")
+            model = xgb.XGBClassifier()
+            model.load_model(str(model_path))
+        else:
+            model = xgb.XGBClassifier(**xgb_params)
+            model.fit(
+                X_train,
+                y_train,
+                eval_set=[(X_val, y_val)],
+                verbose=False,
+            )
 
         prob_val = model.predict_proba(X_val)[:, 1]
         prob_test = model.predict_proba(X_test)[:, 1]
@@ -199,13 +205,19 @@ def run_color_feature_experiment(
     y_test = te_df["is_error"].astype(int).values
 
     for name, f_cols, desc in configs:
-        model = xgb.XGBClassifier(**xgb_params)
-        model.fit(
-            tr_df[f_cols].astype(np.float32),
-            y_train,
-            eval_set=[(v_df[f_cols].astype(np.float32), y_val)],
-            verbose=False,
-        )
+        model_path = ROOT_DIR / "artifacts" / "models" / "model.json"
+        if name == "Variant B (POV-aligned, 16 feat)" and model_path.exists():
+            print(f"   [Loading Canonical Model] Using saved artifact: {model_path}")
+            model = xgb.XGBClassifier()
+            model.load_model(str(model_path))
+        else:
+            model = xgb.XGBClassifier(**xgb_params)
+            model.fit(
+                tr_df[f_cols].astype(np.float32),
+                y_train,
+                eval_set=[(v_df[f_cols].astype(np.float32), y_val)],
+                verbose=False,
+            )
         prob_val = model.predict_proba(v_df[f_cols].astype(np.float32))[:, 1]
         prob_test = model.predict_proba(te_df[f_cols].astype(np.float32))[:, 1]
         m_val = compute_classification_metrics(y_val, prob_val)
@@ -240,7 +252,7 @@ def main():
     test_df = impute_missing_features(test_df)
 
     f_spec = get_default_feature_spec()
-    xgb_params = get_default_xgb_params(device="cuda")
+    xgb_params = get_default_xgb_params(device="cpu")
 
     # 1. Run Experiment 1 (Ablation)
     exp1_results = run_experiment_1_ablation(
