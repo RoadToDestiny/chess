@@ -138,13 +138,14 @@
   - Таблица 2: точные метрики и ДИ кластерного бутстрепа;
   - Таблица 3: метрики абляций Вариантов А, Б, В (включая Log Loss `0.2736` и `0.2769`);
   - Таблица 4: метрики чувствительности к порогам 150/200/300 cp (включая Brier Score `0.0555`);
-  - Абляция цвета: актуальные `0.7981 / 0.2799 / 0.0818` (без цвета) и `0.7992 / 0.2771 / 0.0820` (с цветом, $\Delta\text{ROC-AUC} = +0.0011$).
+  - Абляция цвета: актуальные `0.7981 / 0.2799 / 0.0818` (без цвета) и `0.7992 / 0.2771 / 0.0820` (с цветом, $\Delta\text{ROC-AUC} = +0.0011$);
+  - Анализ важности признаков (Gain на спаренном Рисунке 3): отражены точные значения для обеих панелей — панель (а) Вариант Б: `eval_diff_prev_move` (32.61), `game_phase` (31.32), `move_number` (20.59), `eval_before` (14.32), `attacked_pieces_count` (9.48); панель (б) Вариант В с часами: `eval_diff_prev_move` (36.34), `move_number` (19.30), `eval_before` (14.86), `clock_remaining` (13.42, 4-е место), `attacked_pieces_count` (10.66).
 
 ### 4.2. Графики в `reports/figures/`
 * **Статус: ОК**
 * Все иллюстрации сгенерированы в ходе актуального прогона `scripts/run_stage9_main_experiment.py` с разрешением 300 DPI:
   - [`figure1_calibration_diagram.png`](file:///c:/Users/cz/PycharmProjects/PythonProject/chess/reports/figures/figure1_calibration_diagram.png): калибровочные кривые надежности (Reliability Diagrams) для LogisticRegression, XGBoost Raw и XGBoost Isotonic;
-  - [`figure2_roc_pr_curves.png`](file:///c:/Users/cz/PycharmProjects/PythonProject/chess/reports/figures/figure2_roc_pr_curves.png): спаренные кривые ROC и Precision-Recall с линией случайного угадывания $10.29\%$;
+  - [`figure2_roc_pr_curves.png`](file:///c:/Users/cz/PycharmProjects/PythonProject/chess/reports/figures/figure2_roc_pr_curves.png): спаренные кривые ROC и Precision-Recall с линией случайного угадывания $10.19\%$ ($10.2\%$ на графике);
   - [`figure3_feature_importance.png`](file:///c:/Users/cz/PycharmProjects/PythonProject/chess/reports/figures/figure3_feature_importance.png): иерархия факторов по среднему приросту точности (Gain).
 * Оформление графиков академическое (`seaborn-whitegrid`), шрифт и разметка осей чёткие, графики полностью готовы для публикации в научных журналах ВАК / RSCI / Scopus.
 
